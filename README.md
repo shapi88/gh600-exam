@@ -15,11 +15,12 @@ Production-oriented, safety-first prep for **GitHub Certified: Agentic AI Develo
    4. [Perform evaluation, error analysis, and tuning](#4-perform-evaluation-error-analysis-and-tuning)
    5. [Orchestrate multi-agent coordination](#5-orchestrate-multi-agent-coordination)
    6. [Implement guardrails and accountability](#6-implement-guardrails-and-accountability)
-3. [Practical Examples and Hands-On Labs](#practical-examples-and-hands-on-labs)
-4. [Cheat Sheets and Summary Tables](#cheat-sheets-and-summary-tables)
-5. [Practice Questions](#practice-questions)
-6. [Recommended Resources and References](#recommended-resources-and-references)
-7. [Final Exam Strategy](#final-exam-strategy)
+3. [Tutorials and Exercises by Topic](#tutorials-and-exercises-by-topic)
+4. [Practical Examples and Hands-On Labs](#practical-examples-and-hands-on-labs)
+5. [Cheat Sheets and Summary Tables](#cheat-sheets-and-summary-tables)
+6. [Practice Questions](#practice-questions)
+7. [Recommended Resources and References](#recommended-resources-and-references)
+8. [Final Exam Strategy](#final-exam-strategy)
 
 ## High-Level Study Plan (5 Weeks)
 
@@ -293,6 +294,160 @@ Production-oriented, safety-first prep for **GitHub Certified: Agentic AI Develo
 - Restrict secret access to the minimum jobs and environments.
 - Use audit-friendly channels: PR comments, review summaries, workflow logs, artifacts.
 - Build "stop conditions" into prompts and workflows.
+
+## Tutorials and Exercises by Topic
+
+Use these as guided drills. Each topic includes a short tutorial you can complete in one sitting plus exercises that reinforce exam-style decision making.
+
+### 1. Prepare agent architecture and SDLC processes
+
+**Tutorial goal:** design a safe agent-assisted delivery flow for a small repository.
+
+**Step-by-step tutorial**
+
+1. Create a sample issue with acceptance criteria and non-goals.
+2. Define which parts of the flow are planning-only, execution-capable, and human-approved.
+3. Map the GitHub control plane objects involved: issue, branch, PR, checks, review, merge.
+4. Add branch protection and identify which steps must never be bypassed by an agent.
+5. Write a short policy describing when the agent must stop and escalate to a human.
+
+**Exercises**
+
+- Draw a planner -> executor -> reviewer flow and label the handoff artifacts.
+- Given a docs-only change and an infra change, assign a safe autonomy level to each.
+- Rewrite a risky requirement such as "agent merges fixes automatically" into a governed workflow.
+
+**What a strong answer includes**
+
+- explicit role boundaries
+- required human checkpoints
+- durable audit trail in GitHub artifacts
+- least privilege aligned to the SDLC stage
+
+### 2. Implement tool use and environment interaction
+
+**Tutorial goal:** configure a workflow and tool surface that let an agent act without over-permissioning it.
+
+**Step-by-step tutorial**
+
+1. Start from a workflow with no explicit permissions and identify its risk.
+2. Add a workflow-level `permissions:` block with only the scopes needed for read or comment actions.
+3. Separate read-only jobs from write-capable jobs.
+4. Add an environment for any deployment-like action.
+5. Document which MCP servers are approved, what auth they use, and what systems they can reach.
+
+**Exercises**
+
+- Convert a broad-permission workflow into a least-privilege version.
+- Decide whether a task should use local repo context, GitHub APIs, or an MCP server.
+- List three failure cases caused by poor tool configuration and the guardrail for each.
+
+**What a strong answer includes**
+
+- explicit token scopes
+- job/environment separation
+- approved tool list
+- auth and network boundaries
+
+### 3. Manage memory, state, and execution
+
+**Tutorial goal:** choose the right memory and state strategy for a multi-step agent run.
+
+**Step-by-step tutorial**
+
+1. Take a task that lasts longer than one interaction, such as a repo-wide refactor.
+2. Decide what belongs in prompt context, repository memory, PR comments, and artifacts.
+3. Add a checkpoint after each major step so the run can resume safely.
+4. Identify any actions that must be idempotent before retrying.
+5. Write a short "resume from failure" procedure.
+
+**Exercises**
+
+- Classify five example facts as ephemeral context, durable repository memory, or "do not store."
+- Design a retry-safe pattern for a task that opens issues or comments on PRs.
+- Explain how you would recover from stale context after a branch update.
+
+**What a strong answer includes**
+
+- separation of durable vs transient state
+- no sensitive data in memory
+- explicit checkpoints
+- retry and resume safety
+
+### 4. Perform evaluation, error analysis, and tuning
+
+**Tutorial goal:** build a simple evaluation loop for one agent-assisted workflow.
+
+**Step-by-step tutorial**
+
+1. Pick 5-10 representative tasks from issues or mock backlog items.
+2. Define a scoring rubric for correctness, scope control, safety, and auditability.
+3. Run the same prompt or instructions across the scenario set.
+4. Record failure types such as wrong tool, extra files changed, or unsafe suggestion.
+5. Tune one variable at a time and compare results against the same rubric.
+
+**Exercises**
+
+- Create a failure taxonomy for your study repo and map one mitigation to each category.
+- Propose two eval metrics beyond "task completed."
+- Given an agent that edits unrelated files, define the fastest safe tuning approach.
+
+**What a strong answer includes**
+
+- representative scenarios
+- measurable rubric
+- repeatable comparison across prompt versions
+- safety regressions treated as failures
+
+### 5. Orchestrate multi-agent coordination
+
+**Tutorial goal:** decide when multiple agents help and how to coordinate them safely.
+
+**Step-by-step tutorial**
+
+1. Split a complex task into research, implementation, validation, and synthesis.
+2. Decide which parts can run in parallel and which must remain serialized.
+3. Assign each agent a contract: input, output, permissions, stop conditions.
+4. Define a shared handoff format using PR comments, artifacts, or structured summaries.
+5. Choose who owns the final decision if agents disagree.
+
+**Exercises**
+
+- Design a specialist swarm for a large PR involving docs, tests, and security concerns.
+- Identify one scenario where multi-agent is worse than a single constrained agent.
+- Write a coordinator checklist for resolving conflicting agent outputs.
+
+**What a strong answer includes**
+
+- clear ownership
+- controlled handoffs
+- serialized writes
+- one accountable decision-maker
+
+### 6. Implement guardrails and accountability
+
+**Tutorial goal:** enforce safety with platform controls, not just prompt instructions.
+
+**Step-by-step tutorial**
+
+1. List the highest-risk actions in the repo: workflow edits, secrets access, production deploys.
+2. Map each risk to a GitHub control such as branch protection, CODEOWNERS, environments, or required checks.
+3. Add stop conditions that force the agent to pause before sensitive actions.
+4. Ensure runs are attributable through PR comments, logs, artifacts, or review records.
+5. Create a rollback and incident-response checklist for harmful changes.
+
+**Exercises**
+
+- For three risky actions, name the exact GitHub control that should gate them.
+- Evaluate whether a prompt-only policy is sufficient and explain why or why not.
+- Draft a short accountability checklist for agent-generated PRs.
+
+**What a strong answer includes**
+
+- enforceable controls
+- approval gates for sensitive operations
+- auditable decisions
+- rollback and incident readiness
 
 ## Practical Examples and Hands-On Labs
 
