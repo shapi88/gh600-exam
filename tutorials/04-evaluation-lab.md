@@ -384,7 +384,7 @@ git push origin test/lab04-eval
 
 After completing this lab your repository will have:
 
-| Artefact | Status |
+| Artifact | Status |
 | --- | --- |
 | `evals/scenarios.md` — 5 golden scenarios | ✅ Committed |
 | `evals/rubric.md` — 4-dimension rubric | ✅ Committed |

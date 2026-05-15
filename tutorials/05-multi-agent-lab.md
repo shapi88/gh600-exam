@@ -461,7 +461,7 @@ gh pr view "$PR_NUMBER" --comments
 
 After completing this lab your repository will have:
 
-| Artefact | Status |
+| Artifact | Status |
 | --- | --- |
 | `multi-agent-pipeline.yml` with Planner, Executor, Reviewer, Coordinator jobs | ✅ Committed |
 | Artifact handoffs: `plan.json` → `execution-result.json` → `review-findings.json` | ✅ Demonstrated |

@@ -288,7 +288,7 @@ echo "Mitigation: always re-read file contents from the branch HEAD, not from ca
 
 After completing this lab your repository will have:
 
-| Artefact | Status |
+| Artifact | Status |
 | --- | --- |
 | `.github/copilot-instructions.md` with durable conventions and stop conditions | ✅ Committed |
 | Draft PR with a step-by-step checkpoint checklist | ✅ Open |
