@@ -646,6 +646,9 @@ Return findings grouped by severity with concrete remediation guidance.
 
 ## Recommended Resources and References
 
+> [!NOTE]
+> GitHub and Microsoft documentation URLs can change over time. If any link below has moved, use the relevant docs home page or site search to locate the current article by title.
+
 ### Official
 
 - GitHub Docs — Copilot overview: <https://docs.github.com/en/copilot>
