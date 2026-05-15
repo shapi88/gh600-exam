@@ -5,6 +5,36 @@ Production-oriented, safety-first prep for **GitHub Certified: Agentic AI Develo
 > [!TIP]
 > If you are time-constrained, start with the **5-week study plan** below, work through each topic file in `topics/`, then review the **cheat sheets** and **practice questions** for daily drills.
 
+## Hands-On Labs
+
+> [!NOTE]
+> **Complete [Lab 00 — Prerequisites](tutorials/00-prerequisites.md) before starting any lab.** It covers installing the GitHub CLI, creating your practice repository, and setting up Node.js and Python.
+
+Each lab is a standalone, step-by-step guide you can follow in a fresh GitHub repository with zero prior configuration. **Run Lab 01 before reading Topic 1** — the lab builds the exact setup described in the topic.
+
+| Lab | File | What you will build |
+| --- | --- | --- |
+| 00 | [Prerequisites](tutorials/00-prerequisites.md) | GitHub account, GitHub CLI, practice repo, fine-grained PAT |
+| 01 | [Agent Architecture & SDLC](tutorials/01-agent-architecture-lab.md) | Protected `main`, CODEOWNERS, governed `issue → branch → PR` flow |
+| 02 | [Tool Use & Environment Interaction](tutorials/02-tool-use-lab.md) | Least-privilege workflow, environment gate, approved MCP config |
+| 03 | [Memory, State & Execution](tutorials/03-memory-state-lab.md) | `copilot-instructions.md`, PR checklist checkpoints, artifact upload, idempotent retries |
+| 04 | [Evaluation, Error Analysis & Tuning](tutorials/04-evaluation-lab.md) | Golden scenarios, rubric, versioned prompt results, scope-control and secret-scan workflow |
+| 05 | [Multi-Agent Coordination](tutorials/05-multi-agent-lab.md) | Planner → executor → reviewer → coordinator pipeline with artifact handoffs |
+| 06 | [Guardrails & Accountability](tutorials/06-guardrails-lab.md) | Platform-enforced guardrails, production deployment with approval gate, rollback runbook |
+
+### Evaluation support files
+
+The `evals/` directory contains ready-to-use templates for the evaluation framework covered in Topic 4 and Lab 04:
+
+| File | Purpose |
+| --- | --- |
+| [evals/scenarios.md](evals/scenarios.md) | 5 golden test scenarios |
+| [evals/rubric.md](evals/rubric.md) | 4-dimension scoring rubric |
+| [evals/results-v1.md](evals/results-v1.md) | Example results for prompt version 1 (fails scope check) |
+| [evals/results-v2.md](evals/results-v2.md) | Example results for prompt version 2 (passes all checks) |
+
+---
+
 ## Topics
 
 | # | Topic file | What it covers |
@@ -18,7 +48,7 @@ Production-oriented, safety-first prep for **GitHub Certified: Agentic AI Develo
 | — | [Cheat Sheets](topics/cheat-sheets.md) | All summary tables in one place for rapid review |
 | — | [Resources and Final Exam Strategy](topics/resources.md) | Official docs, practice links, exam strategy tips |
 
-Each topic file contains: key concepts, common pitfalls, a step-by-step tutorial, practical exercises, and exam-style Q&amp;A.
+Each topic file contains: key concepts, common pitfalls, a step-by-step tutorial, practical exercises, exam-style Q&amp;A, and a **Complete Working Example** section with copy-pasteable commands and full workflow YAML.
 
 ## High-Level Study Plan (5 Weeks)
 

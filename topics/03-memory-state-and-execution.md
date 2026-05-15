@@ -103,6 +103,164 @@
 
 ---
 
+## Complete Working Example
+
+### 1. `copilot-instructions.md` — full template
+
+```markdown
+# .github/copilot-instructions.md
+
+## Coding conventions
+- All Python files use 4-space indentation and type annotations.
+- Test files live in `tests/` and are prefixed with `test_`.
+- All functions must have a one-line docstring.
+
+## Workflow rules
+- Always propose a short plan before making code changes.
+- Use the smallest possible diff that fully solves the task.
+- Never bypass required tests, reviews, or environment approvals.
+- Prefer read-only inspection before any write action.
+
+## Stop conditions
+- Stop and request human review before editing any file listed in CODEOWNERS.
+- Stop if the diff touches `.github/workflows/`.
+- Stop if a required secret or credential is missing.
+- Stop after 3 consecutive failed retries and post a summary.
+
+## Sensitive information
+- Never store tokens, passwords, or PII in memory or in any committed file.
+- If a task requires a secret, read it from `secrets.*` at runtime only.
+```
+
+Create and commit it:
+
+```bash
+mkdir -p .github
+# paste the content above into .github/copilot-instructions.md
+git add .github/copilot-instructions.md
+git commit -m "Add durable repo conventions to copilot-instructions.md"
+git push origin main
+```
+
+### 2. PR description checklist as a checkpoint
+
+Use this PR description template when opening an agent-assisted PR:
+
+```markdown
+## Task checklist (agent checkpoint log)
+
+- [x] Step 1: (description)
+- [ ] Step 2: (description)
+- [ ] Step 3: (description)
+- [ ] Human review
+
+**Last checkpoint:** Step 1 complete. Resuming from Step 2.
+```
+
+Update via CLI after each completed step:
+
+```bash
+PR_NUMBER=3
+gh pr edit "$PR_NUMBER" --body "## Task checklist (agent checkpoint log)
+
+- [x] Step 1: Add architecture doc
+- [x] Step 2: Add usage example
+- [ ] Step 3: Add integration test
+- [ ] Human review
+
+**Last checkpoint:** Step 2 complete. Resuming from Step 3."
+```
+
+### 3. Artifact-upload workflow — complete version
+
+```yaml
+name: artifact-demo
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Generate run report
+        run: |
+          mkdir -p reports
+          cat > reports/run-report.json << 'REPORT'
+          {
+            "run_id": "${{ github.run_id }}",
+            "sha": "${{ github.sha }}",
+            "files_changed": 3,
+            "status": "completed"
+          }
+          REPORT
+          echo "Report:"
+          cat reports/run-report.json
+
+      - name: Upload report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-report-${{ github.run_id }}
+          path: reports/
+          retention-days: 14
+```
+
+Download later:
+
+```bash
+RUN_ID=$(gh run list --workflow artifact-demo.yml --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run download "$RUN_ID" --dir /tmp/artifacts
+cat "/tmp/artifacts/run-report-${RUN_ID}/run-report.json"
+```
+
+### 4. Retry-safe issue creation
+
+```bash
+#!/usr/bin/env bash
+# Creates an issue only if one with the same title doesn't already exist.
+set -euo pipefail
+
+TITLE="Automated: weekly dependency audit"
+REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}"
+
+EXISTING=$(gh issue list \
+  --repo "$REPO" \
+  --state open \
+  --search "$TITLE" \
+  --json number,title \
+  --jq ".[] | select(.title == \"$TITLE\") | .number")
+
+if [ -n "$EXISTING" ]; then
+  echo "Issue already exists: #$EXISTING — skipping creation."
+  exit 0
+fi
+
+gh issue create \
+  --repo "$REPO" \
+  --title "$TITLE" \
+  --body "Created by automated audit workflow. Run: $GITHUB_RUN_ID" \
+  --label "maintenance"
+```
+
+Running this script twice produces the same observable state — one open issue — regardless of how many times it is invoked.
+
+---
+
+## Hands-On Lab
+
+Follow [Lab 03 — Memory, State & Execution](../tutorials/03-memory-state-lab.md) to build all four patterns step-by-step in your own practice repository.
+
+---
+
 ## Relevant Resources
 
 - [GitHub Docs — Managing Copilot Memory](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/copilot-memory)

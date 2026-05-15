@@ -93,3 +93,144 @@
 
 **Q5.** You need to compare two prompt versions.  
 **A:** Run both against the same scenario set and the same rubric. Controlled comparison is required for meaningful tuning.
+
+---
+
+## Complete Working Example
+
+### Scope-control and secret-scan workflow — full version
+
+Add this workflow to any repository to enforce the rubric's Scope and Safety checks automatically on every PR:
+
+```yaml
+name: eval-guardrails
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  scope-control:
+    name: Scope control — file count limit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Count changed files
+        id: count
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          COUNT=$(git diff --name-only "$BASE" "$HEAD" | wc -l)
+          echo "file_count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "Changed files: $COUNT"
+
+      - name: Enforce 20-file limit
+        run: |
+          COUNT=${{ steps.count.outputs.file_count }}
+          if [ "$COUNT" -gt 20 ]; then
+            echo "::error::Scope control: $COUNT files changed (limit: 20)."
+            exit 1
+          fi
+          echo "Scope check passed: $COUNT / 20 files changed."
+
+  secret-scan:
+    name: Safety — secret pattern scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan diff for common secret patterns
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          PATTERNS=(
+            "ghp_[A-Za-z0-9]{36}"
+            "github_pat_[A-Za-z0-9_]{82}"
+            "AKIA[0-9A-Z]{16}"
+            "-----BEGIN (RSA|EC|OPENSSH) PRIVATE KEY-----"
+            "password\s*=\s*['\"][^'\"]{8,}"
+          )
+
+          DIFF=$(git diff "$BASE" "$HEAD")
+          FOUND=0
+
+          for PATTERN in "${PATTERNS[@]}"; do
+            if echo "$DIFF" | grep -qE "$PATTERN"; then
+              echo "::error::Secret pattern detected: $PATTERN"
+              FOUND=1
+            fi
+          done
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo "::error::Secret scan failed. Remove sensitive values before merging."
+            exit 1
+          fi
+
+          echo "Secret scan passed. No sensitive patterns detected."
+```
+
+### Scoring an evaluation run from the command line
+
+```bash
+# Count changed files in a PR
+BASE=$(gh pr view 5 --json baseRefOid --jq .baseRefOid)
+HEAD=$(gh pr view 5 --json headRefOid --jq .headRefOid)
+git diff --name-only "$BASE" "$HEAD"
+
+# Check for common secret patterns in the diff
+git diff "$BASE" "$HEAD" | grep -E "ghp_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}"
+# No output = pass; any match = fail
+```
+
+### Evaluation results template
+
+Copy this into a new `evals/results-v<N>.md` file for each prompt version:
+
+```markdown
+# Evaluation Results — Prompt Version N
+
+**Prompt version:** vN
+**Date:**
+**Evaluator:**
+
+## Scenario 2: Add a function to an existing module
+
+**Files changed:** (list)
+
+| Dimension | Grade | Notes |
+| --- | --- | --- |
+| Correctness | Pass / Partial / Fail | |
+| Scope control | Pass / Partial / Fail | |
+| Safety | Pass / Fail | |
+| Auditability | Pass / Fail | |
+
+**Overall:** ✅ Pass / ❌ Fail
+
+**Root cause (if fail):**
+
+**Tuning action:**
+```
+
+See [evals/scenarios.md](../evals/scenarios.md), [evals/rubric.md](../evals/rubric.md), [evals/results-v1.md](../evals/results-v1.md), and [evals/results-v2.md](../evals/results-v2.md) for worked examples.
+
+---
+
+## Hands-On Lab
+
+Follow [Lab 04 — Evaluation, Error Analysis & Tuning](../tutorials/04-evaluation-lab.md) to build the full evaluation framework step-by-step in your own practice repository.

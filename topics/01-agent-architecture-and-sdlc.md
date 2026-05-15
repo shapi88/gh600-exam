@@ -102,6 +102,167 @@
 
 ---
 
+## Complete Working Example
+
+The following commands set up a fully governed repository from scratch using the `gh` CLI. Copy-paste each block in order.
+
+### 1. Create a repository and protect `main`
+
+```bash
+# Create the practice repo
+gh repo create gh600-practice --private --add-readme --clone
+cd gh600-practice
+
+# Add branch protection: require PR, 1 review, status checks, no admin bypass
+gh api repos/{owner}/{repo}/branches/main/protection \
+  --method PUT \
+  --field required_status_checks='{"strict":true,"contexts":["lint"]}' \
+  --field enforce_admins=true \
+  --field required_pull_request_reviews='{"required_approving_review_count":1}' \
+  --field restrictions=null
+```
+
+Expected output: `HTTP 200` and a JSON object describing the protection rule.
+
+### 2. Add CODEOWNERS
+
+```bash
+mkdir -p .github
+cat > .github/CODEOWNERS << 'EOF'
+/.github/workflows/ @<your-username>
+*.yml               @<your-username>
+*.yaml              @<your-username>
+EOF
+
+git add .github/CODEOWNERS
+git commit -m "Add CODEOWNERS to gate workflow and YAML changes"
+git push origin main
+```
+
+### 3. Create the minimal CI workflow (status check)
+
+```bash
+mkdir -p .github/workflows
+cat > .github/workflows/ci.yml << 'EOF'
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check for trailing whitespace
+        run: |
+          if grep -rn " $" --include="*.py" --include="*.md" .; then
+            echo "Trailing whitespace found."
+            exit 1
+          fi
+          echo "No trailing whitespace found."
+EOF
+
+git add .github/workflows/ci.yml
+git commit -m "Add minimal CI workflow for branch protection status check"
+git push origin main
+```
+
+### 4. Demonstrate the governed `issue → branch → PR` flow
+
+```bash
+# Open an issue with acceptance criteria
+gh issue create \
+  --title "Add a greeting function to the codebase" \
+  --body "## Acceptance criteria
+- [ ] greet(name) added to src/greet.py
+- [ ] Returns 'Hello, <name>!'
+- [ ] Unit test added
+
+## Out of scope
+- CLI wiring
+
+## Risk note
+Low risk. No external dependencies." \
+  --label "enhancement"
+
+# Create a feature branch and implement
+git checkout -b feature/greet-function-issue-1
+mkdir -p src tests
+
+cat > src/greet.py << 'EOF'
+def greet(name: str) -> str:
+    """Return a greeting string for the given name."""
+    return f"Hello, {name}!"
+EOF
+
+cat > tests/test_greet.py << 'EOF'
+from src.greet import greet
+
+def test_greet_happy_path():
+    assert greet("Alice") == "Hello, Alice!"
+
+def test_greet_empty_string():
+    assert greet("") == "Hello, !"
+EOF
+
+git add src/greet.py tests/test_greet.py
+git commit -m "Add greet function and unit tests (closes #1)"
+git push origin feature/greet-function-issue-1
+
+# Open a draft PR with explicit agent rationale
+gh pr create \
+  --title "Add greet function (closes #1)" \
+  --body "## Summary
+Implements greet(name) as specified in issue #1.
+
+## Agent rationale
+Used the narrowest possible change: one new file in src/ and one test file.
+No existing files modified.
+
+## Checklist
+- [x] Function added
+- [x] Unit tests added
+- [ ] Human review complete" \
+  --draft --base main
+```
+
+### 5. Verify branch protection blocks a direct push
+
+```bash
+# Attempt a direct push to main — this will be rejected
+echo "test" > direct-push-test.txt
+git add direct-push-test.txt
+git commit -m "Attempt direct push to main"
+git push origin main
+# Expected: remote: error: GH006: Protected branch update failed
+```
+
+### Shell commands reference
+
+| Task | Command |
+| --- | --- |
+| Create branch protection | `gh api repos/{owner}/{repo}/branches/main/protection --method PUT ...` |
+| View branch protection | `gh api repos/{owner}/{repo}/branches/main/protection` |
+| Create issue | `gh issue create --title "..." --body "..."` |
+| Open draft PR | `gh pr create --draft --base main` |
+| Mark PR ready | `gh pr ready <number>` |
+| List PRs | `gh pr list` |
+
+---
+
+## Hands-On Lab
+
+Follow [Lab 01 — Agent Architecture & SDLC](../tutorials/01-agent-architecture-lab.md) to build this setup step-by-step in your own practice repository.
+
+---
+
 ## Relevant Resources
 
 - [GitHub Docs — Copilot overview](https://docs.github.com/en/copilot)
