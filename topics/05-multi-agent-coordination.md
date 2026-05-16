@@ -123,6 +123,226 @@ Return findings grouped by severity with concrete remediation guidance.
 
 ---
 
+## Complete Working Example
+
+### Full multi-job planner → executor → reviewer → coordinator workflow
+
+This workflow serializes four agent roles using `needs:`, passes structured artifacts as handoffs, and posts a synthesized summary to the PR.
+
+```yaml
+name: multi-agent-pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_description:
+        description: "Describe the task for the planner agent"
+        required: true
+        default: "Add a farewell function to src/greet.py and write a test"
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# ── Job 1: Planner ───────────────────────────────────────────────────────────
+jobs:
+  planner:
+    name: "Agent: Planner"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      plan_artifact: ${{ steps.plan.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Generate implementation plan
+        id: plan
+        run: |
+          mkdir -p agent-artifacts
+          cat > agent-artifacts/plan.json << 'PLAN'
+          {
+            "steps": [
+              {"id": 1, "file": "src/greet.py", "action": "add_function"},
+              {"id": 2, "file": "tests/test_greet.py", "action": "add_test"}
+            ],
+            "estimated_files_changed": 2,
+            "human_approval_required": false
+          }
+          PLAN
+          echo "artifact_name=plan-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+          cat agent-artifacts/plan.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plan-${{ github.run_id }}
+          path: agent-artifacts/plan.json
+          retention-days: 7
+
+# ── Job 2: Executor ──────────────────────────────────────────────────────────
+  executor:
+    name: "Agent: Executor"
+    runs-on: ubuntu-latest
+    needs: planner          # waits for planner to complete
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan-${{ github.run_id }}
+          path: agent-artifacts/
+
+      - name: Validate plan scope before executing
+        run: |
+          FILES=$(python3 -c "
+          import json
+          plan = json.load(open('agent-artifacts/plan.json'))
+          print(plan['estimated_files_changed'])
+          ")
+          echo "Plan calls for $FILES file(s)."
+          [ "$FILES" -le 20 ] || { echo "::error::Plan exceeds 20-file limit."; exit 1; }
+
+      - name: Simulate execution and record result
+        run: |
+          mkdir -p execution-output
+          cat > execution-output/execution-result.json << 'EXEC'
+          {
+            "run_id": "${{ github.run_id }}",
+            "steps_completed": [1, 2],
+            "files_modified": ["src/greet.py", "tests/test_greet.py"],
+            "status": "completed"
+          }
+          EXEC
+          cat execution-output/execution-result.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: execution-result-${{ github.run_id }}
+          path: execution-output/execution-result.json
+          retention-days: 7
+
+# ── Job 3: Reviewer ──────────────────────────────────────────────────────────
+  reviewer:
+    name: "Agent: Reviewer"
+    runs-on: ubuntu-latest
+    needs: executor         # waits for executor to complete
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-${{ github.run_id }}"
+          merge-multiple: true
+          path: agent-artifacts/
+
+      - name: Cross-check planned vs executed files
+        run: |
+          PLANNED=$(python3 -c "
+          import json
+          plan = json.load(open('agent-artifacts/plan.json'))
+          print('\n'.join(sorted([s['file'] for s in plan['steps']])))
+          ")
+          EXECUTED=$(python3 -c "
+          import json
+          result = json.load(open('agent-artifacts/execution-result.json'))
+          print('\n'.join(sorted(result['files_modified'])))
+          ")
+          [ "$PLANNED" = "$EXECUTED" ] || {
+            echo "::error::Scope mismatch: planned='$PLANNED' executed='$EXECUTED'"; exit 1
+          }
+          echo "Review passed: executor stayed within planned scope."
+
+      - name: Write review findings
+        run: |
+          mkdir -p review-output
+          cat > review-output/review-findings.json << 'REVIEW'
+          {
+            "run_id": "${{ github.run_id }}",
+            "scope_check": "pass",
+            "safety_check": "pass",
+            "recommendation": "approve"
+          }
+          REVIEW
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: review-findings-${{ github.run_id }}
+          path: review-output/review-findings.json
+          retention-days: 7
+
+# ── Job 4: Coordinator ───────────────────────────────────────────────────────
+  coordinator:
+    name: "Agent: Coordinator"
+    runs-on: ubuntu-latest
+    needs: reviewer         # waits for reviewer to complete
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-${{ github.run_id }}"
+          merge-multiple: true
+          path: agent-artifacts/
+
+      - name: Post synthesized summary to PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RECOMMENDATION=$(python3 -c "
+          import json
+          findings = json.load(open('agent-artifacts/review-findings.json'))
+          print(findings['recommendation'])
+          ")
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --body "## 🤖 Multi-Agent Pipeline Summary
+
+| Agent | Status |
+| --- | --- |
+| Planner | ✅ Plan generated |
+| Executor | ✅ Execution completed |
+| Reviewer | ✅ Review passed |
+
+**Recommendation:** ${RECOMMENDATION}
+
+_Human approval still required before merge._" \
+            --repo "${{ github.repository }}"
+```
+
+### Key patterns to remember
+
+| Pattern | YAML construct | Purpose |
+| --- | --- | --- |
+| Serialize jobs | `needs: [previous-job]` | Enforce planner → executor ordering |
+| Pass data between jobs | `upload-artifact` / `download-artifact` | Structured handoff contract |
+| Job-level outputs | `outputs:` + `echo "key=value" >> $GITHUB_OUTPUT` | Lightweight scalar handoffs |
+| Coordinator synthesis | Final job with `needs: [a, b]` after parallel jobs | Merge findings from specialist agents |
+
+---
+
+## Hands-On Lab
+
+Follow [Lab 05 — Multi-Agent Coordination](../tutorials/05-multi-agent-lab.md) to build the full pipeline step-by-step in your own practice repository.
+
+---
+
 ## Relevant Resources
 
 - [GitHub Docs — Use GitHub Copilot agents](https://docs.github.com/en/copilot/how-tos/use-copilot-agents)
