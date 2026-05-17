@@ -234,3 +234,15 @@ See [evals/scenarios.md](../evals/scenarios.md), [evals/rubric.md](../evals/rubr
 ## Hands-On Lab
 
 Follow [Lab 04 — Evaluation, Error Analysis & Tuning](../tutorials/04-evaluation-lab.md) to build the full evaluation framework step-by-step in your own practice repository.
+
+---
+
+## Deep Dive
+
+Go further with **[Deep Dive 4 — Evaluation, Error Analysis, and Tuning](../deep-dives/04-evaluation-error-tuning-deep.md)**, which covers:
+- Workflow re-run modes and how `run_attempt` enables cross-attempt comparison
+- Code scanning and secret scanning alert APIs as automated quality gates
+- PR check run API — turning rubric dimensions into required status checks
+- GitHub Models playground and SDK-based prompt evaluation scripts
+- Scheduled regression testing for agent behavior
+- Additional exercises with authoritative GitHub Docs links for each sub-topic

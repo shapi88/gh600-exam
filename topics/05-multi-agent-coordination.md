@@ -348,3 +348,15 @@ Follow [Lab 05 — Multi-Agent Coordination](../tutorials/05-multi-agent-lab.md)
 - [GitHub Docs — Use GitHub Copilot agents](https://docs.github.com/en/copilot/how-tos/use-copilot-agents)
 - [GitHub Docs — Workflow syntax (jobs, needs, outputs)](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
 - [GitHub Docs — Storing workflow data as artifacts](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-workflow-data-as-artifacts)
+
+---
+
+## Deep Dive
+
+Go further with **[Deep Dive 5 — Multi-Agent Coordination](../deep-dives/05-multi-agent-coordination-deep.md)**, which covers:
+- Reusable workflows (`workflow_call`) as typed, versioned handoff contracts
+- `workflow_dispatch` inputs for structured, auditable agent triggers
+- PR review API — programmatic approval, request-changes, and dismissal patterns
+- GitHub Actions environments as trust-level gates between agents
+- Conflict resolution and deduplication when multiple agents produce overlapping findings
+- Additional exercises with authoritative GitHub Docs links for each sub-topic
