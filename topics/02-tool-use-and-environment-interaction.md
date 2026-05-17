@@ -162,3 +162,15 @@ jobs:
 - [GitHub Docs — About MCP](https://docs.github.com/en/copilot/concepts/about-mcp)
 - [GitHub Docs — Extend the coding agent with MCP](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp)
 - [Official Model Context Protocol docs](https://modelcontextprotocol.io/introduction)
+
+---
+
+## Deep Dive
+
+Go further with **[Deep Dive 2 — Tool Use and Environment Interaction](../deep-dives/02-tool-use-environment-deep.md)**, which covers:
+- Complete `GITHUB_TOKEN` permissions matrix with agent-specific guidance
+- MCP server governance, threat model, and configuration examples
+- `copilot-setup-steps.yml` — what to pre-install and why it prevents tool failures
+- Self-hosted vs. GitHub-hosted runners — environment isolation tradeoffs for agents
+- Tool failure handling patterns: retry vs. escalate, with workflow examples
+- Additional exercises with authoritative GitHub Docs links for each sub-topic

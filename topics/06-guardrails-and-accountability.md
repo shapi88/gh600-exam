@@ -154,3 +154,16 @@ jobs:
 - [GitHub Docs — About OIDC in Actions](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
 - [GitHub Docs — About CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
 - [GitHub Docs — Automatic token authentication](https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication)
+
+---
+
+## Deep Dive
+
+Go further with **[Deep Dive 6 — Guardrails and Accountability](../deep-dives/06-guardrails-accountability-deep.md)**, which covers:
+- GitHub Environments — full protection rule matrix and REST API configuration
+- GitHub Audit Log API — querying agent-attributed events and streaming to a SIEM
+- Secret scanning push protection — how it works at the git layer and how agents should handle rejections
+- Dependabot and code scanning auto-triage workflows — what agents may and may not do
+- Copilot org/enterprise policy settings — seat assignment, MCP allowlists, content exclusions
+- Complete hard-stop workflow implementation for PRs touching `.github/workflows/`
+- Additional exercises with authoritative GitHub Docs links for each sub-topic

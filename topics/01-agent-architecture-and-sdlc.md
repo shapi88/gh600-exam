@@ -269,3 +269,14 @@ Follow [Lab 01 — Agent Architecture & SDLC](../tutorials/01-agent-architecture
 - [GitHub Docs — Use GitHub Copilot agents](https://docs.github.com/en/copilot/how-tos/use-copilot-agents)
 - [GitHub Docs — About CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
 - [GitHub Docs — Workflow syntax (permissions, environments, jobs)](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+
+---
+
+## Deep Dive
+
+Go further with **[Deep Dive 1 — Agent Architecture and SDLC](../deep-dives/01-agent-architecture-sdlc-deep.md)**, which covers:
+- GitHub Copilot coding agent internals and lifecycle API mapping
+- GitHub Issues and Projects as structured planning artifacts
+- Branch protection and rulesets — complete configuration reference
+- CODEOWNERS syntax, ordering rules, and governance patterns
+- Additional exercises with authoritative GitHub Docs links for each sub-topic

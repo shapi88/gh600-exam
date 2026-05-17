@@ -50,6 +50,20 @@ The `evals/` directory contains ready-to-use templates for the evaluation framew
 
 Each topic file contains: key concepts, common pitfalls, a step-by-step tutorial, practical exercises, exam-style Q&amp;A, and a **Complete Working Example** section with copy-pasteable commands and full workflow YAML.
 
+## Deep Dives
+
+Each deep-dive file is a companion to its topic. It links every concept to the authoritative GitHub documentation section, adds implementation detail, and provides additional exercises.
+
+| # | Deep Dive file | What it adds |
+| --- | --- | --- |
+| 1 | [Agent Architecture and SDLC — Deep Dive](deep-dives/01-agent-architecture-sdlc-deep.md) | Coding agent lifecycle API mapping, branch protection matrix, CODEOWNERS ordering rules |
+| 2 | [Tool Use and Environment Interaction — Deep Dive](deep-dives/02-tool-use-environment-deep.md) | Full permissions matrix, MCP threat model, setup steps authoring, runner isolation tradeoffs |
+| 3 | [Memory, State, and Execution — Deep Dive](deep-dives/03-memory-state-execution-deep.md) | `copilot-instructions.md` limits, artifact retention, cache vs. artifact, idempotency patterns |
+| 4 | [Evaluation, Error Analysis, and Tuning — Deep Dive](deep-dives/04-evaluation-error-tuning-deep.md) | Re-run modes, code scanning API gates, check run rubric, GitHub Models SDK evals |
+| 5 | [Multi-Agent Coordination — Deep Dive](deep-dives/05-multi-agent-coordination-deep.md) | Reusable workflows as handoff contracts, PR review API, environment trust gates, conflict resolution |
+| 6 | [Guardrails and Accountability — Deep Dive](deep-dives/06-guardrails-accountability-deep.md) | Environments API, audit log queries, push protection, Dependabot triage, Copilot org policies |
+| — | [GitHub Docs Index](deep-dives/docs-index.md) | All GitHub documentation URLs organised by topic for rapid look-up |
+
 ## High-Level Study Plan (5 Weeks)
 
 | Week | Focus areas | Time target | Deliverables |

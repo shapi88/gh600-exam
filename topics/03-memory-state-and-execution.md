@@ -266,3 +266,15 @@ Follow [Lab 03 — Memory, State & Execution](../tutorials/03-memory-state-lab.m
 - [GitHub Docs — Managing Copilot Memory](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/copilot-memory)
 - [GitHub Docs — Use GitHub Copilot agents](https://docs.github.com/en/copilot/how-tos/use-copilot-agents)
 - [GitHub Docs — Storing workflow data as artifacts](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/storing-workflow-data-as-artifacts)
+
+---
+
+## Deep Dive
+
+Go further with **[Deep Dive 3 — Memory, State, and Execution](../deep-dives/03-memory-state-execution-deep.md)**, which covers:
+- `copilot-instructions.md` format, size limits, and authoring guidance
+- GitHub Actions artifacts — retention policies, naming conventions, and multi-job handoffs
+- Workflow caching as short-lived shared state vs. artifacts for durable output
+- Three idempotency patterns: check-before-create, concurrency groups, and step outcome checks
+- Context window pressure — what consumes budget and how to manage it
+- Additional exercises with authoritative GitHub Docs links for each sub-topic
