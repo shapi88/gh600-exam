@@ -87,6 +87,7 @@ jobs:
             ],
             "parallel_groups": [["ST-001"], ["ST-002"], ["ST-003"]],
             "serial_sequence": ["ST-001", "ST-002", "ST-003"],
+            "artifact_type": "plan",
             "handoff_artifact_schema": "templates/artifact-schema.json",
             "generated_at": "${timestamp}"
           }
@@ -135,7 +136,7 @@ jobs:
           persist-credentials: false
 
       - name: Download plan artifact
-        uses: actions/download-artifact@v4.1.3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ needs.planner.outputs.plan_artifact }}
           path: /tmp/plan-input
