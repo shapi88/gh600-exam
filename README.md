@@ -64,6 +64,90 @@ Each deep-dive file is a companion to its topic. It links every concept to the a
 | 6 | [Guardrails and Accountability — Deep Dive](deep-dives/06-guardrails-accountability-deep.md) | Environments API, audit log queries, push protection, Dependabot triage, Copilot org policies |
 | — | [GitHub Docs Index](deep-dives/docs-index.md) | All GitHub documentation URLs organised by topic for rapid look-up |
 
+## Agentic AI Template
+
+> [!TIP]
+> Use this template to turn any repository into a production-ready, guardrailed agentic AI environment in 5 steps. Every file links to the GH-600 lesson that governs it.
+
+### Quickstart — 5 steps to a running, guardrailed agent
+
+| Step | Action | File(s) to create |
+| --- | --- | --- |
+| 1 | Copy the agent standing orders and memory hints | `.github/copilot-instructions.md`, `.github/copilot-memory.md` |
+| 2 | Define ownership and branch protection | `CODEOWNERS`, `.github/branch-protection.md` |
+| 3 | Register approved MCP servers and define skills | `.github/mcp-config.json`, `.github/skills/*.yml` |
+| 4 | Activate the guardrail workflows | `.github/workflows/guardrails-check.yml`, `agent-pr-review.yml`, `agent-issue-triage.yml` |
+| 5 | Configure the `agent-execution` environment with a Required Reviewer | GitHub UI: Settings → Environments |
+
+### Configuration Files (deploy to your repo)
+
+| File | GH-600 topic | What it does |
+| --- | --- | --- |
+| [.github/copilot-instructions.md](.github/copilot-instructions.md) | Topic 1, 6 | Agent standing orders: MAY / MAY NOT / stop conditions / autonomy level |
+| [.github/copilot-memory.md](.github/copilot-memory.md) | Topic 3 | Persistent context: file map, conventions, baselines, checkpoints |
+| [.github/guardrails.md](.github/guardrails.md) | Topic 6 | Autonomy matrix, hard stops, audit trail requirements, rollback procedures |
+| [.github/mcp-config.json](.github/mcp-config.json) | Topic 2 | Approved MCP server registry with scopes and deny list |
+| [.github/branch-protection.md](.github/branch-protection.md) | Topic 1 | Auditable record of required branch protection settings |
+| [CODEOWNERS](CODEOWNERS) | Topic 1, 6 | Human review requirements for governance and workflow files |
+| [.github/INCIDENT_RESPONSE.md](.github/INCIDENT_RESPONSE.md) | Topic 6 | Step-by-step runbook for bad agent actions |
+| [.github/ISSUE_TEMPLATE/agent-incident.md](.github/ISSUE_TEMPLATE/agent-incident.md) | Topic 6 | Structured incident report template |
+
+### Skills (`.github/skills/`)
+
+| Skill | GH-600 topic | Autonomy | What it does |
+| --- | --- | --- | --- |
+| [review-pr.yml](.github/skills/review-pr.yml) | Topic 1, 2 | Level 2 | Reads PR diff; posts structured review comment |
+| [triage-issue.yml](.github/skills/triage-issue.yml) | Topic 1, 2 | Level 2 | Classifies new issues and applies a label |
+| [generate-docs.yml](.github/skills/generate-docs.yml) | Topic 3 | Level 2 | Drafts a topic, tutorial, or deep-dive file on a new branch |
+| [run-eval.yml](.github/skills/run-eval.yml) | Topic 4 | Level 1 | Runs scenarios against a rubric and uploads a results artifact |
+| [multi-agent-planner.yml](.github/skills/multi-agent-planner.yml) | Topic 5 | Level 1 | Decomposes a task into a plan artifact; never executes |
+
+### Workflows (`.github/workflows/`)
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| [guardrails-check.yml](.github/workflows/guardrails-check.yml) | Every push | Secret scan, scope control, attribution check |
+| [agent-pr-review.yml](.github/workflows/agent-pr-review.yml) | `pull_request` | Posts structured review comment; hard-stops on sensitive paths |
+| [agent-issue-triage.yml](.github/workflows/agent-issue-triage.yml) | `issues: opened` | Applies label and posts triage comment; detects secret patterns |
+| [agent-eval.yml](.github/workflows/agent-eval.yml) | `workflow_dispatch` | Runs evaluation scenarios and uploads results artifact |
+| [agent-multi-agent-planner.yml](.github/workflows/agent-multi-agent-planner.yml) | `workflow_dispatch` | Planner → human approval gate → executor → reviewer pipeline |
+
+### Evaluation Files (`evals/`)
+
+| File | What it does |
+| --- | --- |
+| [evals/agent-template-scenarios.md](evals/agent-template-scenarios.md) | 5 golden scenarios for the template (PR review, triage, doc gen, eval, multi-agent) |
+| [evals/agent-template-rubric.md](evals/agent-template-rubric.md) | 4-dimension rubric: correctness, safety, auditability, scope control |
+| [evals/results-template.md](evals/results-template.md) | Blank results template — copy to `results-v<N>.md` for each run |
+
+### Copy-Paste Templates (`templates/`)
+
+| Template | What it provides |
+| --- | --- |
+| [templates/copilot-instructions-example.md](templates/copilot-instructions-example.md) | Fully annotated `copilot-instructions.md` with guidance |
+| [templates/mcp-config-example.json](templates/mcp-config-example.json) | MCP config with 3 annotated example servers and deny list |
+| [templates/skill-example.yml](templates/skill-example.yml) | Annotated skill YAML with every field explained |
+| [templates/workflow-agent-safe-example.yml](templates/workflow-agent-safe-example.yml) | Complete least-privilege agent workflow with guard step |
+| [templates/workflow-multi-agent-example.yml](templates/workflow-multi-agent-example.yml) | Planner → approval gate → executor → reviewer pipeline |
+| [templates/pr-checklist.md](templates/pr-checklist.md) | Agent PR description template with accountability checklist |
+| [templates/artifact-schema.json](templates/artifact-schema.json) | JSON Schema for inter-agent handoff artifacts |
+| [templates/guardrails-example.md](templates/guardrails-example.md) | Annotated guardrails policy with autonomy matrix |
+| [templates/incident-report-example.md](templates/incident-report-example.md) | Filled-out incident report example |
+| [templates/mcp-server-entry.json](templates/mcp-server-entry.json) | Blank MCP server entry for registering a new tool |
+
+### GH-600 Alignment
+
+| Lesson area | Template coverage |
+| --- | --- |
+| Topic 1 — Agent Architecture | `copilot-instructions.md`, autonomy levels, `CODEOWNERS`, `branch-protection.md` |
+| Topic 2 — Tool Use & MCP | `mcp-config.json`, least-privilege workflows, network policy entries |
+| Topic 3 — Memory & State | `copilot-memory.md`, `pr-checklist.md`, `artifact-schema.json`, idempotency pattern |
+| Topic 4 — Evaluation | `agent-template-scenarios.md`, `agent-template-rubric.md`, `results-template.md` |
+| Topic 5 — Multi-Agent | Planner/executor/reviewer workflow, handoff artifact schema, skill definitions |
+| Topic 6 — Guardrails | `guardrails.md`, `INCIDENT_RESPONSE.md`, incident issue template, `guardrails-check.yml` |
+
+---
+
 ## High-Level Study Plan (5 Weeks)
 
 | Week | Focus areas | Time target | Deliverables |

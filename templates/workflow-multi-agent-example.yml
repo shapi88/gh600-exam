@@ -1,0 +1,182 @@
+# Example: Multi-Agent Planner → Executor → Reviewer Pipeline
+
+> **How to use:** Copy this file to `.github/workflows/agent-pipeline-<task>.yml`.
+> Configure the `agent-execution` environment in **Settings → Environments** with a Required Reviewer.
+> CODEOWNERS review is required before activating.
+
+---
+
+```yaml
+name: agent-pipeline-example
+# ANNOTATION: A three-job pipeline: planner (read-only) → executor (gated) → reviewer (read+comment).
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_description:
+        description: "Full description of the task to execute"
+        required: true
+      target_branch:
+        description: "Branch to open PRs against (default: main)"
+        required: false
+        default: "main"
+
+# ── Workflow-level permission ceiling ─────────────────────────────────────────
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ── Phase 1: Planner — generates a plan artifact, NO writes ─────────────────
+  planner:
+    name: Generate plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read         # Read-only. Planner never writes source files.
+    outputs:
+      plan_artifact: ${{ steps.plan.outputs.artifact_name }}
+      subtask_count: ${{ steps.plan.outputs.subtask_count }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Generate plan artifact
+        id: plan
+        env:
+          TASK: ${{ inputs.task_description }}
+        run: |
+          mkdir -p /tmp/plan
+          timestamp=$(date -u +%Y%m%dT%H%M%SZ)
+
+          # REPLACE: generate your actual plan here (LLM call, script, etc.)
+          cat > /tmp/plan/plan.json << PLAN
+          {
+            "task": "$TASK",
+            "requires_human_approval": true,
+            "subtasks": [
+              {"id": "ST-001", "description": "Research: read and scope", "permissions": {"contents": "read"}},
+              {"id": "ST-002", "description": "Implement: smallest diff", "permissions": {"contents": "write", "pull-requests": "write"}},
+              {"id": "ST-003", "description": "Validate: review and summarise", "permissions": {"pull-requests": "write"}}
+            ],
+            "generated_at": "${timestamp}"
+          }
+          PLAN
+
+          echo "artifact_name=plan-${timestamp}" >> "$GITHUB_OUTPUT"
+          echo "subtask_count=3" >> "$GITHUB_OUTPUT"
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.plan.outputs.artifact_name }}
+          path: /tmp/plan/plan.json
+          retention-days: 30
+
+      - name: Write plan summary
+        env:
+          TASK: ${{ inputs.task_description }}
+          COUNT: ${{ steps.plan.outputs.subtask_count }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## 📋 Plan Generated
+          **Task:** ${TASK}
+          **Sub-tasks:** ${COUNT}
+          **Approval required:** ✅ Yes — executor will not run until you approve the environment.
+          SUMMARY
+
+  # ── Phase 2: Executor — REQUIRES environment approval before running ─────────
+  executor:
+    name: Execute plan (requires approval)
+    needs: planner
+    runs-on: ubuntu-latest
+    environment: agent-execution
+    # ANNOTATION: This environment gate is the human-in-the-loop checkpoint.
+    # Configure "agent-execution" in Settings → Environments → Required Reviewers.
+    # The workflow pauses here until a human approves.
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.planner.outputs.plan_artifact }}
+          path: /tmp/plan-input
+
+      - name: Execute sub-tasks
+        env:
+          PLAN: /tmp/plan-input/plan.json
+          TARGET: ${{ inputs.target_branch }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # REPLACE: implement sub-tasks per the plan.
+          # Each write sub-task MUST create a branch and open a PR.
+          # MUST NOT push directly to $TARGET.
+          echo "Executing plan: $(cat $PLAN)"
+
+  # ── Phase 3: Reviewer — posts structured findings to the executor PR ─────────
+  reviewer:
+    name: Review executor output
+    needs: [planner, executor]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Post reviewer findings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TASK: ${{ inputs.task_description }}
+        run: |
+          # REPLACE: find the PR opened by executor and post a review comment.
+          echo "Reviewer: post structured findings."
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## 🔍 Reviewer Summary
+          **Task:** ${TASK}
+          **Status:** Findings posted to executor PR.
+          **Next step:** Human reviewer approves or requests changes.
+          SUMMARY
+```
+
+---
+
+## Pipeline Pattern Explanation
+
+```
+workflow_dispatch (human triggers)
+        │
+        ▼
+   ┌─────────┐     artifact      ┌───────────────────────┐
+   │ planner │ ──────────────▶   │ environment gate       │
+   │ (read)  │                   │ (human approval pause) │
+   └─────────┘                   └───────────┬───────────┘
+                                             │ approved
+                                             ▼
+                                       ┌──────────┐     PR
+                                       │ executor │ ──────────▶ opens PR
+                                       │ (write)  │
+                                       └─────┬────┘
+                                             │
+                                             ▼
+                                       ┌──────────┐
+                                       │ reviewer │ ──────────▶ posts findings
+                                       │ (comment)│
+                                       └──────────┘
+```
+
+## Required Setup Checklist
+
+- [ ] Create `agent-execution` environment in **Settings → Environments**
+- [ ] Add at least one Required Reviewer to that environment
+- [ ] Verify `environment: agent-execution` in the executor job
+- [ ] Confirm CODEOWNERS covers `.github/workflows/` for this file

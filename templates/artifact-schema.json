@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentHandoffArtifact",
+  "description": "Standard schema for inter-agent handoff artifacts in multi-agent workflows. Every artifact passed between agents must conform to this schema. See templates/artifact-schema.json and .github/skills/multi-agent-planner.yml.",
+  "type": "object",
+  "required": [
+    "artifact_version",
+    "generated_at",
+    "source_agent",
+    "target_agent",
+    "workflow_run_id",
+    "task_id",
+    "status",
+    "requires_human_approval",
+    "payload"
+  ],
+  "properties": {
+    "artifact_version": {
+      "type": "string",
+      "description": "Schema version for forward-compatibility checks.",
+      "const": "1.0.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when the artifact was created."
+    },
+    "source_agent": {
+      "type": "string",
+      "description": "Skill name of the agent that produced this artifact (e.g. multi-agent-planner).",
+      "minLength": 1
+    },
+    "target_agent": {
+      "type": "string",
+      "description": "Skill name of the agent that should consume this artifact (e.g. executor).",
+      "minLength": 1
+    },
+    "workflow_run_id": {
+      "type": "integer",
+      "description": "GitHub Actions workflow run ID for the run that produced this artifact."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Unique identifier for the task or sub-task this artifact represents (e.g. ST-002).",
+      "pattern": "^[A-Z]{2}-[0-9]{3}$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending_approval", "approved", "in_progress", "completed", "failed", "cancelled"],
+      "description": "Current status of the task associated with this artifact."
+    },
+    "requires_human_approval": {
+      "type": "boolean",
+      "description": "Always true for Level 2+ handoffs. The receiving agent must not execute until a human has approved."
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "GitHub username of the human who approved execution. Required when status is approved or completed.",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Task-specific data passed from source to target agent.",
+      "required": ["description", "inputs", "expected_outputs"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Plain-text description of the sub-task.",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Key-value map of inputs required by the target agent.",
+          "additionalProperties": true
+        },
+        "expected_outputs": {
+          "type": "array",
+          "description": "List of output items the target agent must produce.",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "type": "string", "enum": ["file", "pr", "comment", "artifact", "label"] },
+              "path": { "type": "string", "description": "File path or artifact name, if applicable." }
+            }
+          }
+        },
+        "stop_conditions": {
+          "type": "array",
+          "description": "Conditions that must cause the target agent to halt and request human review.",
+          "items": { "type": "string" }
+        },
+        "permissions": {
+          "type": "object",
+          "description": "GitHub Actions permissions required by the target agent for this task.",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["read", "write", "none"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit_trail": {
+      "type": "object",
+      "description": "Links to evidence that this handoff occurred.",
+      "properties": {
+        "pr_number": { "type": "integer" },
+        "issue_number": { "type": "integer" },
+        "workflow_run_url": { "type": "string", "format": "uri" },
+        "artifact_download_url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "artifact_version": "1.0.0",
+      "generated_at": "2026-05-19T14:00:00Z",
+      "source_agent": "multi-agent-planner",
+      "target_agent": "executor",
+      "workflow_run_id": 12345678,
+      "task_id": "ST-002",
+      "status": "pending_approval",
+      "requires_human_approval": true,
+      "payload": {
+        "description": "Implement: add farewell() function to src/greet.py with a unit test.",
+        "inputs": {
+          "branch": "copilot/add-farewell-fn",
+          "target_branch": "main"
+        },
+        "expected_outputs": [
+          { "name": "source_change", "type": "file", "path": "src/greet.py" },
+          { "name": "test_change", "type": "file", "path": "tests/test_greet.py" },
+          { "name": "pr", "type": "pr" }
+        ],
+        "stop_conditions": [
+          "Diff touches .github/workflows/",
+          "Diff size exceeds 400 lines"
+        ],
+        "permissions": {
+          "contents": "write",
+          "pull-requests": "write"
+        }
+      },
+      "audit_trail": {
+        "workflow_run_url": "https://github.com/shapi88/gh600-exam/actions/runs/12345678"
+      }
+    }
+  ]
+}
