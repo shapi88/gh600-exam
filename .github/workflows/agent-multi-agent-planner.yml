@@ -87,7 +87,7 @@ jobs:
             ],
             "parallel_groups": [["ST-001"], ["ST-002"], ["ST-003"]],
             "serial_sequence": ["ST-001", "ST-002", "ST-003"],
-            "handoff_artifact_schema": "templates/artifact-schema.json",
+            "artifact_type": "plan",
             "generated_at": "${timestamp}"
           }
           PLAN
