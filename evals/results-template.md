@@ -3,6 +3,10 @@
 Copy this file to `results-v<N>.md`, fill in every field, and commit it to `evals/`.
 Do not edit existing `results-v*.md` files — always create a new version.
 
+> **Scoring methodology:** Use [exam-form.md](exam-form.md) alongside this file.
+> The exam form converts dimension grades to a numeric pass rate and produces the official Pass/Fail gate verdict.
+> This file captures raw agent output; the exam form captures the scored summary.
+
 ---
 
 **Prompt version:** <!-- e.g. v3 -->
