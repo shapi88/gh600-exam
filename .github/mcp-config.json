@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Approved MCP server registry for this repository. Only servers listed here may be called by agentic workflows. Add new entries using templates/mcp-server-entry.json and obtain CODEOWNERS approval before merging.",
+  "version": "1.0.0",
+  "policy": {
+    "default_action": "deny",
+    "require_approver": true,
+    "allowed_branch_patterns": ["copilot/*", "agent/*", "main"]
+  },
+  "servers": [
+    {
+      "name": "github-rest",
+      "description": "GitHub REST API — read-only access to issues, PRs, commits, and code search for this repository.",
+      "endpoint": "https://api.github.com",
+      "auth_method": "GITHUB_TOKEN",
+      "allowed_scopes": ["contents:read", "issues:read", "pull-requests:read", "checks:read"],
+      "denied_scopes": ["contents:write", "admin:repo_hook", "delete_repo"],
+      "network_policy": {
+        "allowed_hosts": ["api.github.com"],
+        "allow_internet": false
+      },
+      "threat_model_note": "Short-lived GITHUB_TOKEN; read-only scopes only. Risk: token leakage in logs — mitigated by masking.",
+      "approved_by": "shapi88",
+      "approved_date": "2026-05-19"
+    },
+    {
+      "name": "github-actions",
+      "description": "GitHub Actions API — trigger workflow dispatches and read run logs for this repository.",
+      "endpoint": "https://api.github.com/repos/{owner}/{repo}/actions",
+      "auth_method": "GITHUB_TOKEN",
+      "allowed_scopes": ["actions:read", "actions:write"],
+      "denied_scopes": ["admin:org", "workflow"],
+      "network_policy": {
+        "allowed_hosts": ["api.github.com"],
+        "allow_internet": false
+      },
+      "threat_model_note": "actions:write allows triggering workflows — only permitted for workflow_dispatch events targeting non-production environments.",
+      "approved_by": "shapi88",
+      "approved_date": "2026-05-19"
+    },
+    {
+      "name": "github-graphql",
+      "description": "GitHub GraphQL API — batch queries for discussions, PR review threads, and project board data.",
+      "endpoint": "https://api.github.com/graphql",
+      "auth_method": "GITHUB_TOKEN",
+      "allowed_scopes": ["contents:read", "issues:read", "pull-requests:read"],
+      "denied_scopes": ["contents:write", "admin:org"],
+      "network_policy": {
+        "allowed_hosts": ["api.github.com"],
+        "allow_internet": false
+      },
+      "threat_model_note": "GraphQL mutations are explicitly not permitted; this entry is read-only query use only.",
+      "approved_by": "shapi88",
+      "approved_date": "2026-05-19"
+    }
+  ],
+  "deny_list": [
+    {
+      "pattern": "*",
+      "note": "All servers not in the allow list above are denied by default (default_action: deny)."
+    },
+    {
+      "pattern": "localhost:*",
+      "note": "No local server connections; prevents SSRF to runner-local services."
+    },
+    {
+      "pattern": "169.254.169.254",
+      "note": "Block cloud instance metadata endpoint (IMDS) — prevents credential exfiltration from hosted runners."
+    }
+  ]
+}

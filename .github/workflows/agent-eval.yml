@@ -1,0 +1,174 @@
+name: agent-eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenarios_file:
+        description: "Path to scenarios file (e.g. evals/scenarios.md)"
+        required: true
+        default: "evals/scenarios.md"
+      rubric_file:
+        description: "Path to rubric file (e.g. evals/rubric.md)"
+        required: true
+        default: "evals/rubric.md"
+      prompt_version:
+        description: "Prompt version label (e.g. v3)"
+        required: true
+        default: "v1"
+      pass_threshold:
+        description: "Minimum pass rate to gate on, 0–100 (default: 80)"
+        required: false
+        default: "80"
+
+# Read-only: this workflow never writes source files.
+permissions:
+  contents: read
+
+jobs:
+  validate-inputs:
+    name: Validate eval inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      scenarios_exists: ${{ steps.check.outputs.scenarios_exists }}
+      rubric_exists: ${{ steps.check.outputs.rubric_exists }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check files exist
+        id: check
+        env:
+          SCENARIOS: ${{ inputs.scenarios_file }}
+          RUBRIC: ${{ inputs.rubric_file }}
+        run: |
+          ok=true
+          if [ -f "$SCENARIOS" ]; then
+            echo "scenarios_exists=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Scenarios file found: $SCENARIOS"
+          else
+            echo "scenarios_exists=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Scenarios file not found: $SCENARIOS"
+            ok=false
+          fi
+          if [ -f "$RUBRIC" ]; then
+            echo "rubric_exists=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Rubric file found: $RUBRIC"
+          else
+            echo "rubric_exists=false" >> "$GITHUB_OUTPUT"
+            echo "::error::Rubric file not found: $RUBRIC"
+            ok=false
+          fi
+          [ "$ok" = "true" ] || exit 1
+
+  run-eval:
+    name: Run evaluation scenarios
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Parse scenarios and rubric
+        id: parse
+        env:
+          SCENARIOS: ${{ inputs.scenarios_file }}
+          RUBRIC: ${{ inputs.rubric_file }}
+          VERSION: ${{ inputs.prompt_version }}
+        run: |
+          scenario_count=$(grep -c '^## Scenario' "$SCENARIOS" || echo 0)
+          echo "scenario_count=$scenario_count" >> "$GITHUB_OUTPUT"
+          echo "Parsed $scenario_count scenarios from $SCENARIOS"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Generate results template
+        id: results
+        env:
+          VERSION: ${{ inputs.prompt_version }}
+          SCENARIO_COUNT: ${{ steps.parse.outputs.scenario_count }}
+          THRESHOLD: ${{ inputs.pass_threshold }}
+          SCENARIOS: ${{ inputs.scenarios_file }}
+          RUBRIC: ${{ inputs.rubric_file }}
+        run: |
+          mkdir -p /tmp/eval-output
+          cat > /tmp/eval-output/results-${VERSION}.md << RESULTS
+          # Evaluation Results — Prompt Version ${VERSION}
+
+          **Prompt version:** ${VERSION}
+          **Date:** $(date -u +%Y-%m-%d)
+          **Scenarios file:** ${SCENARIOS}
+          **Rubric file:** ${RUBRIC}
+          **Pass threshold:** ${THRESHOLD}%
+
+          ---
+
+          ## Instructions for the Evaluator
+
+          Run each scenario listed in \`${SCENARIOS}\` and fill in the table below.
+          Apply each dimension independently using \`${RUBRIC}\`.
+          Record the root cause for every Fail grade.
+
+          ---
+
+          ## Results Table
+
+          | Scenario | Correctness | Scope | Safety | Auditability | Overall |
+          | --- | --- | --- | --- | --- | --- |
+          $(for i in $(seq 1 "$SCENARIO_COUNT"); do echo "| Scenario $i | _fill_ | _fill_ | _fill_ | _fill_ | _fill_ |"; done)
+
+          ---
+
+          ## Summary
+
+          **Pass count:** _fill in_
+          **Fail count:** _fill in_
+          **Pass rate:** _fill in_%
+          **Gate (${THRESHOLD}% threshold):** _fill in — Pass / Fail_
+
+          ---
+
+          ## Root Causes for Failures
+
+          _(Document each failing dimension here.)_
+
+          ---
+
+          ## Tuning Actions for Next Version
+
+          _(List one tuning action per root cause.)_
+          RESULTS
+          echo "output_file=/tmp/eval-output/results-${VERSION}.md" >> "$GITHUB_OUTPUT"
+          echo "scenario_count=$SCENARIO_COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ inputs.prompt_version }}
+          path: /tmp/eval-output/results-${{ inputs.prompt_version }}.md
+          retention-days: 90
+
+      - name: Write workflow summary
+        env:
+          VERSION: ${{ inputs.prompt_version }}
+          SCENARIO_COUNT: ${{ steps.results.outputs.scenario_count }}
+          THRESHOLD: ${{ inputs.pass_threshold }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## Eval Run — ${VERSION}
+
+          | Field | Value |
+          | --- | --- |
+          | Prompt version | \`${VERSION}\` |
+          | Scenarios parsed | ${SCENARIO_COUNT} |
+          | Pass threshold | ${THRESHOLD}% |
+          | Artifact | \`eval-results-${VERSION}\` |
+
+          > Results template uploaded. Fill in grades and rerun to apply the gate check.
+          SUMMARY

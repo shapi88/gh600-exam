@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_annotation": "This is an annotated example. Copy .github/mcp-config.json to your repo and replace values. Remove _annotation fields before committing.",
+  "description": "Approved MCP server registry. Default policy: deny. Only servers listed here may be called.",
+  "version": "1.0.0",
+  "policy": {
+    "default_action": "deny",
+    "_annotation_policy": "Always set default_action to deny. Require CODEOWNERS approval to add servers.",
+    "require_approver": true,
+    "allowed_branch_patterns": ["copilot/*", "agent/*", "main"]
+  },
+  "servers": [
+    {
+      "_annotation": "Server 1: GitHub REST API — read-only. Safe for most agent workflows.",
+      "name": "github-rest",
+      "description": "GitHub REST API — read-only access to issues, PRs, and code.",
+      "endpoint": "https://api.github.com",
+      "auth_method": "GITHUB_TOKEN",
+      "_annotation_auth": "GITHUB_TOKEN is short-lived and scoped per workflow run. Prefer it over PATs.",
+      "allowed_scopes": ["contents:read", "issues:read", "pull-requests:read", "checks:read"],
+      "denied_scopes": ["contents:write", "admin:repo_hook", "delete_repo"],
+      "_annotation_scopes": "List denied_scopes explicitly. It makes the threat model reviewable.",
+      "network_policy": {
+        "allowed_hosts": ["api.github.com"],
+        "allow_internet": false,
+        "_annotation_network": "Restrict to the minimum hostnames. allow_internet: false is the safe default."
+      },
+      "threat_model_note": "Short-lived GITHUB_TOKEN; read-only scopes. Risk: token in logs — mitigated by masking.",
+      "approved_by": "YOUR_USERNAME_HERE",
+      "approved_date": "YYYY-MM-DD"
+    },
+    {
+      "_annotation": "Server 2: GitHub Actions API — allows triggering workflow_dispatch events.",
+      "name": "github-actions",
+      "description": "GitHub Actions API — trigger workflow dispatches and read run logs.",
+      "endpoint": "https://api.github.com/repos/{owner}/{repo}/actions",
+      "auth_method": "GITHUB_TOKEN",
+      "allowed_scopes": ["actions:read", "actions:write"],
+      "denied_scopes": ["admin:org", "workflow"],
+      "_annotation_actions_write": "actions:write allows triggering workflows. Gate on non-production environments only.",
+      "network_policy": {
+        "allowed_hosts": ["api.github.com"],
+        "allow_internet": false
+      },
+      "threat_model_note": "actions:write can trigger arbitrary workflows — limit to workflow_dispatch on non-production environments.",
+      "approved_by": "YOUR_USERNAME_HERE",
+      "approved_date": "YYYY-MM-DD"
+    },
+    {
+      "_annotation": "Server 3: Custom internal tool stub. Replace all placeholder values.",
+      "name": "YOUR_TOOL_NAME",
+      "description": "REPLACE: one-sentence description of what this server provides.",
+      "endpoint": "https://YOUR_TOOL_DOMAIN/api",
+      "auth_method": "REPLACE_WITH: GITHUB_TOKEN | PAT | OIDC | API_KEY | NONE",
+      "allowed_scopes": ["REPLACE_WITH_MINIMUM_REQUIRED_SCOPES"],
+      "denied_scopes": ["REPLACE_WITH_SCOPES_TO_BLOCK"],
+      "network_policy": {
+        "allowed_hosts": ["YOUR_TOOL_DOMAIN"],
+        "allow_internet": false
+      },
+      "threat_model_note": "REPLACE: describe the highest-risk action and its mitigation.",
+      "approved_by": "YOUR_USERNAME_HERE",
+      "approved_date": "YYYY-MM-DD",
+      "review_due": "YYYY-MM-DD"
+    }
+  ],
+  "deny_list": [
+    {
+      "pattern": "*",
+      "note": "Default deny — all servers not in the allow list are blocked."
+    },
+    {
+      "pattern": "localhost:*",
+      "note": "Block SSRF to runner-local services."
+    },
+    {
+      "pattern": "169.254.169.254",
+      "note": "Block cloud IMDS endpoint — prevents credential exfiltration."
+    }
+  ]
+}
