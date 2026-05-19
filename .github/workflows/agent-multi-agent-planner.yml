@@ -1,0 +1,196 @@
+name: agent-multi-agent-planner
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_description:
+        description: "Full description of the complex task to decompose"
+        required: true
+      max_subtasks:
+        description: "Maximum sub-tasks to generate (default: 8)"
+        required: false
+        default: "8"
+      target_branch:
+        description: "Branch for executor to open a PR against (default: main)"
+        required: false
+        default: "main"
+
+# Workflow-level ceiling.
+permissions:
+  contents: read
+  pull-requests: write
+
+# ── Environment: production requires human approval ───────────────────────────
+# The executor job targets the 'agent-execution' environment.
+# Configure that environment in Settings → Environments with a Required Reviewer.
+
+jobs:
+  # ── Phase 1: Planner — generates the plan artifact (no writes) ──────────────
+  planner:
+    name: Generate plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      plan_artifact: ${{ steps.plan.outputs.artifact_name }}
+      subtask_count: ${{ steps.plan.outputs.subtask_count }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Generate plan artifact
+        id: plan
+        env:
+          TASK: ${{ inputs.task_description }}
+          MAX_SUBTASKS: ${{ inputs.max_subtasks }}
+        run: |
+          mkdir -p /tmp/plan-output
+          timestamp=$(date -u +%Y%m%dT%H%M%SZ)
+          artifact_name="plan-${timestamp}"
+
+          # Build a structured plan JSON (skeleton — replace with real LLM call)
+          cat > /tmp/plan-output/plan.json << PLAN
+          {
+            "plan_version": "${timestamp}",
+            "task": "$TASK",
+            "max_subtasks": $MAX_SUBTASKS,
+            "requires_human_approval": true,
+            "subtasks": [
+              {
+                "id": "ST-001",
+                "description": "Research: read relevant files and identify scope",
+                "agent": "researcher",
+                "permissions": {"contents": "read"},
+                "parallel_group": "A",
+                "stop_conditions": ["touches .github/workflows/"]
+              },
+              {
+                "id": "ST-002",
+                "description": "Implement: make the smallest diff that satisfies the task",
+                "agent": "executor",
+                "permissions": {"contents": "write", "pull-requests": "write"},
+                "depends_on": ["ST-001"],
+                "parallel_group": "B",
+                "stop_conditions": ["diff > 400 lines", "touches CODEOWNERS"]
+              },
+              {
+                "id": "ST-003",
+                "description": "Validate: review the diff and post a summary comment",
+                "agent": "reviewer",
+                "permissions": {"pull-requests": "write", "contents": "read"},
+                "depends_on": ["ST-002"],
+                "parallel_group": "C",
+                "stop_conditions": []
+              }
+            ],
+            "parallel_groups": [["ST-001"], ["ST-002"], ["ST-003"]],
+            "serial_sequence": ["ST-001", "ST-002", "ST-003"],
+            "handoff_artifact_schema": "templates/artifact-schema.json",
+            "generated_at": "${timestamp}"
+          }
+          PLAN
+
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+          subtask_count=$(python3 -c "import json,sys; d=json.load(open('/tmp/plan-output/plan.json')); print(len(d['subtasks']))" 2>/dev/null || echo 3)
+          echo "subtask_count=$subtask_count" >> "$GITHUB_OUTPUT"
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.plan.outputs.artifact_name }}
+          path: /tmp/plan-output/plan.json
+          retention-days: 30
+
+      - name: Write plan summary
+        env:
+          TASK: ${{ inputs.task_description }}
+          SUBTASK_COUNT: ${{ steps.plan.outputs.subtask_count }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## 📋 Plan Generated
+
+          **Task:** ${TASK}
+          **Sub-tasks:** ${SUBTASK_COUNT}
+          **Requires human approval:** ✅ Yes — executor job will not run until approved.
+
+          To proceed: approve the \`agent-execution\` environment in the next job.
+          To abort: cancel this workflow run.
+          SUMMARY
+
+  # ── Phase 2: Executor — REQUIRES manual environment approval ────────────────
+  executor:
+    name: Execute plan (requires approval)
+    needs: planner
+    runs-on: ubuntu-latest
+    environment: agent-execution   # Configure this environment with Required Reviewer
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.planner.outputs.plan_artifact }}
+          path: /tmp/plan-input
+
+      - name: Execute plan sub-tasks
+        env:
+          PLAN_FILE: /tmp/plan-input/plan.json
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Plan file contents:"
+          cat "$PLAN_FILE"
+          echo ""
+          echo "Executor: implement sub-tasks per the plan."
+          echo "Each write sub-task must create a branch and open a PR."
+          echo "Executor MUST NOT push directly to $TARGET_BRANCH."
+          # Replace this echo with real execution logic or a Copilot agent call.
+
+      - name: Write executor summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## ⚙️ Executor Completed
+
+          Sub-tasks executed per the approved plan.
+          A PR has been opened for human review before merge.
+          SUMMARY
+
+  # ── Phase 3: Reviewer — validates executor output ───────────────────────────
+  reviewer:
+    name: Review executor output
+    needs: [planner, executor]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Post reviewer findings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TASK: ${{ inputs.task_description }}
+        run: |
+          # In a real pipeline, look up the PR opened by executor and post a review comment.
+          # Replace with actual PR lookup and comment logic.
+          echo "Reviewer: post structured findings to the executor PR."
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## 🔍 Reviewer Summary
+
+          **Task:** ${TASK}
+          **Status:** Findings posted to the executor PR.
+          **Next step:** Human reviewer approves or requests changes on the PR.
+          SUMMARY

@@ -1,0 +1,74 @@
+name: multi-agent-planner
+description: >
+  Decomposes a complex task into a structured plan with sub-tasks, agent
+  assignments, sequencing, and handoff contracts. Produces a plan artifact
+  only — does NOT execute any sub-task. Execution requires a separate human
+  approval step before an executor agent may proceed.
+autonomy_level: 1
+trigger:
+  event: workflow_dispatch
+  inputs:
+    task_description:
+      description: "Full description of the complex task to decompose"
+      required: true
+    max_subtasks:
+      description: "Maximum number of sub-tasks to generate (default: 8)"
+      required: false
+      default: "8"
+input_schema:
+  task_description:
+    type: string
+    required: true
+    maxLength: 2000
+    description: Plain-text description of the task to decompose.
+  max_subtasks:
+    type: integer
+    required: false
+    default: 8
+    minimum: 2
+    maximum: 15
+output_schema:
+  plan_artifact:
+    type: string
+    description: Path to the uploaded plan JSON artifact.
+  subtask_count:
+    type: integer
+    description: Number of sub-tasks generated.
+  parallel_groups:
+    type: array
+    items:
+      type: array
+      items:
+        type: string
+    description: Groups of sub-task IDs that can run in parallel.
+  serial_sequence:
+    type: array
+    items:
+      type: string
+    description: Ordered list of sub-task IDs that must run serially.
+  requires_human_approval:
+    type: boolean
+    description: Always true — execution may not begin without a human approval step.
+permissions: {}
+stop_conditions:
+  - "Task description references production environment — flag for Level 4 autonomy review."
+  - "Any sub-task would touch .github/workflows/ — mark that sub-task requires_human_approval=true."
+  - "Sub-task count would exceed max_subtasks — truncate and note that the task may need further decomposition."
+  - "Two sub-tasks would write the same file simultaneously — add a serialization dependency."
+audit_trail:
+  required: true
+  method: workflow_artifact
+  format: |
+    {
+      "plan_version": "{prompt_version}",
+      "task": "{task_description_summary}",
+      "subtasks": [ ... ],
+      "parallel_groups": [ ... ],
+      "serial_sequence": [ ... ],
+      "requires_human_approval": true,
+      "generated_at": "{iso_timestamp}"
+    }
+handoff_contract:
+  artifact_schema: templates/artifact-schema.json
+  next_agent: executor (requires human approval gate before handoff)
+mcp_servers_allowed: []

@@ -1,0 +1,26 @@
+# CODEOWNERS — Agentic AI Governance
+#
+# These rules require human review for all high-risk paths.
+# Agents are hard-stopped from modifying these files (see .github/copilot-instructions.md).
+# Syntax: <path-pattern>  <owner(s)>
+# Owners must be GitHub usernames or team slugs (e.g., @org/team-name).
+
+# ── Governance files ──────────────────────────────────────────────────────────
+.github/copilot-instructions.md   @shapi88
+.github/copilot-memory.md         @shapi88
+.github/guardrails.md             @shapi88
+.github/mcp-config.json           @shapi88
+CODEOWNERS                        @shapi88
+
+# ── Workflow files (privilege-escalation risk) ─────────────────────────────────
+.github/workflows/                @shapi88
+
+# ── Skills definitions (expand agent surface) ─────────────────────────────────
+.github/skills/                   @shapi88
+
+# ── Evaluation baselines ──────────────────────────────────────────────────────
+evals/                            @shapi88
+
+# ── Incident response runbooks ────────────────────────────────────────────────
+.github/INCIDENT_RESPONSE.md      @shapi88
+.github/ISSUE_TEMPLATE/           @shapi88

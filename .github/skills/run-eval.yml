@@ -1,0 +1,65 @@
+name: run-eval
+description: >
+  Executes a set of evaluation scenarios from a scenarios file against a
+  rubric file and produces a scored results Markdown artifact. Read-only;
+  does not modify any source file.
+autonomy_level: 1
+trigger:
+  event: workflow_dispatch
+  inputs:
+    scenarios_file:
+      description: "Path to scenarios file, e.g. evals/scenarios.md"
+      required: true
+    rubric_file:
+      description: "Path to rubric file, e.g. evals/rubric.md"
+      required: true
+    prompt_version:
+      description: "Prompt version label, e.g. v3"
+      required: true
+input_schema:
+  scenarios_file:
+    type: string
+    required: true
+    description: Relative path to the Markdown scenarios file.
+  rubric_file:
+    type: string
+    required: true
+    description: Relative path to the Markdown rubric file.
+  prompt_version:
+    type: string
+    required: true
+    pattern: "^v[0-9]+$"
+    description: Version label used in the output artifact filename.
+output_schema:
+  results_artifact:
+    type: string
+    description: "Path to the uploaded artifact: evals/results-{prompt_version}.md"
+  pass_count:
+    type: integer
+    description: Number of scenarios that passed all applicable dimensions.
+  fail_count:
+    type: integer
+    description: Number of scenarios that failed one or more dimensions.
+  pass_rate:
+    type: number
+    description: pass_count / total_scenarios as a decimal.
+  gate_passed:
+    type: boolean
+    description: True if pass_rate >= 0.8 (80% threshold).
+permissions:
+  contents: read
+stop_conditions:
+  - "Scenarios file does not exist at the provided path — stop and report error."
+  - "Rubric file does not exist at the provided path — stop and report error."
+  - "pass_rate < 0.8 — gate_passed is false; post a workflow summary and do not proceed to any deployment step."
+audit_trail:
+  required: true
+  method: workflow_summary
+  format: |
+    ## Eval Results — {prompt_version}
+    | Scenario | Correctness | Scope | Safety | Auditability | Overall |
+    |---|---|---|---|---|---|
+    {results_table}
+    **Pass rate:** {pass_rate_pct}% ({pass_count}/{total})
+    **Gate:** {gate_result}
+mcp_servers_allowed: []

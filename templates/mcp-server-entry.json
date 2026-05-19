@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Blank template for registering a new MCP server. Copy this file, fill in every field, and submit a PR. CODEOWNERS approval required before merging into .github/mcp-config.json.",
+  "name": "<REPLACE: short unique identifier, e.g. my-internal-tool>",
+  "description_field": "<REPLACE: one-sentence description of what this server provides>",
+  "endpoint": "<REPLACE: full base URL, e.g. https://tools.example.com/api>",
+  "auth_method": "<REPLACE: one of GITHUB_TOKEN | PAT | OIDC | API_KEY | NONE>",
+  "allowed_scopes": [
+    "<REPLACE: list only the exact scopes this server needs, e.g. contents:read>"
+  ],
+  "denied_scopes": [
+    "<REPLACE: list scopes that must never be granted to this server>"
+  ],
+  "network_policy": {
+    "allowed_hosts": [
+      "<REPLACE: exact hostnames this server may contact>"
+    ],
+    "allow_internet": false,
+    "note": "Set allow_internet to true only with explicit justification and CODEOWNERS approval."
+  },
+  "threat_model_note": "<REPLACE: describe the highest-risk action this server could take and the mitigation>",
+  "approved_by": "<REPLACE: GitHub username of the human approver>",
+  "approved_date": "<REPLACE: ISO 8601 date, e.g. 2026-05-19>",
+  "review_due": "<REPLACE: ISO 8601 date for next access review, e.g. 2026-11-19>"
+}
