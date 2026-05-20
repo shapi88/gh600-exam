@@ -49,8 +49,11 @@ Do **not** edit a committed exam form — create a new version instead to preser
 | File | Prompt version | Date | Status |
 | --- | --- | --- | --- |
 | [exam-form.md](exam-form.md) | — | — | Template (do not fill in directly) |
+| [practice-exam-v1.md](practice-exam-v1.md) | v1 | 2026-05-19 | Published — 30 questions, Medium difficulty, all 6 topics, ~60 min |
+| [practice-exam-v2.md](practice-exam-v2.md) | v2 | 2026-05-19 | Published — 42 questions, Hard difficulty, all 6 topics, ~120 min |
+| [practice-exam-v3.md](practice-exam-v3.md) | v3 | 2026-05-19 | Published — 42 questions, Hard difficulty, all 6 topics, ~120 min (alternate question set) |
 
-> Add a row here each time you commit a completed `exam-form-v<N>.md`.
+> Add a row here each time you commit a completed `exam-form-v<N>.md` or `practice-exam-v<N>.md`.
 
 ---
 
