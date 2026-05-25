@@ -5,6 +5,24 @@ Production-oriented, safety-first prep for **GitHub Certified: Agentic AI Develo
 > [!TIP]
 > If you are time-constrained, start with the **5-week study plan** below, work through each topic file in `topics/`, then review the **cheat sheets** and **practice questions** for daily drills.
 
+<details>
+<summary>⚡ 1-Hour Crash Course — most exam-critical bullets</summary>
+
+1. **Role separation is non-negotiable.** Planner ≠ Executor ≠ Reviewer. No agent approves its own PR.
+2. **GitHub is the control plane.** Every important decision lives in an Issue, PR, Actions log, or artifact — never in transient chat.
+3. **Least privilege on every job.** Always add an explicit `permissions:` block; never rely on default token scopes.
+4. **Human gates at three points.** Plan approval (before execution), PR merge (branch protection + required review), production deploy (environment protection rule with required reviewer).
+5. **Hard stops are platform-enforced.** `.github/workflows/`, `CODEOWNERS`, and `copilot-instructions.md` are blocked by CODEOWNERS + required review — not just by prompt instructions.
+6. **Memory belongs in the right store.** Secrets → never stored. Conventions → `copilot-instructions.md` (repository memory). Checkpoint progress → PR description or artifact. One-off debug flags → prompt context only.
+7. **Idempotency before retries.** Check for existence before creating. Running the same step twice must produce the same state, not duplicates.
+8. **4-dimension rubric.** Every eval scenario must pass: Correctness, Scope Control, Safety (no Partial allowed), Auditability. One Safety Fail = scenario Fail regardless of other scores.
+9. **Multi-agent: serialize writes, parallelize reads.** Use `needs:` and artifacts for handoffs. Conflict on the same file → escalate to human.
+10. **Prompts guide; platform controls enforce.** Any policy stated only in `copilot-instructions.md` is advisory. Back every hard requirement with branch protection, CODEOWNERS, or an environment rule.
+
+> See [Cheat Sheets](topics/cheat-sheets.md) and the [Workflow Diagram](topics/workflow-diagram.md) for the full reference tables.
+
+</details>
+
 ## Hands-On Labs
 
 > [!NOTE]
@@ -45,6 +63,7 @@ The `evals/` directory contains ready-to-use templates for the evaluation framew
 | 4 | [Evaluation, Error Analysis, and Tuning](topics/04-evaluation-error-analysis-and-tuning.md) | Rubrics, golden scenarios, error categories, prompt iteration |
 | 5 | [Multi-Agent Coordination](topics/05-multi-agent-coordination.md) | Orchestration patterns, handoff contracts, conflict resolution |
 | 6 | [Guardrails and Accountability](topics/06-guardrails-and-accountability.md) | Autonomy levels, approval gates, audit trails, incident response |
+| — | [Workflow Diagram](topics/workflow-diagram.md) | Complete lifecycle diagram: all actors, phases, human gates, hard stops, and artifacts |
 | — | [Cheat Sheets](topics/cheat-sheets.md) | All summary tables in one place for rapid review |
 | — | [Resources and Final Exam Strategy](topics/resources.md) | Official docs, practice links, exam strategy tips |
 
@@ -125,6 +144,7 @@ Each deep-dive file is a companion to its topic. It links every concept to the a
 | Template | What it provides |
 | --- | --- |
 | [templates/copilot-instructions-example.md](templates/copilot-instructions-example.md) | Fully annotated `copilot-instructions.md` with guidance |
+| [templates/copilot-memory-example.md](templates/copilot-memory-example.md) | Annotated `copilot-memory.md` template with field-by-field explanation |
 | [templates/mcp-config-example.json](templates/mcp-config-example.json) | MCP config with 3 annotated example servers and deny list |
 | [templates/skill-example.yml](templates/skill-example.yml) | Annotated skill YAML with every field explained |
 | [templates/workflow-agent-safe-example.yml](templates/workflow-agent-safe-example.yml) | Complete least-privilege agent workflow with guard step |
@@ -139,12 +159,12 @@ Each deep-dive file is a companion to its topic. It links every concept to the a
 
 | Lesson area | Template coverage |
 | --- | --- |
-| Topic 1 — Agent Architecture | `copilot-instructions.md`, autonomy levels, `CODEOWNERS`, `branch-protection.md` |
+| Topic 1 — Agent Architecture | `copilot-instructions.md`, autonomy levels, `CODEOWNERS`, `branch-protection.md`, `workflow-diagram.md` |
 | Topic 2 — Tool Use & MCP | `mcp-config.json`, least-privilege workflows, network policy entries |
-| Topic 3 — Memory & State | `copilot-memory.md`, `pr-checklist.md`, `artifact-schema.json`, idempotency pattern |
+| Topic 3 — Memory & State | `copilot-memory.md`, `copilot-memory-example.md`, `pr-checklist.md`, `artifact-schema.json`, idempotency pattern |
 | Topic 4 — Evaluation | `agent-template-scenarios.md`, `agent-template-rubric.md`, `results-template.md` |
-| Topic 5 — Multi-Agent | Planner/executor/reviewer workflow, handoff artifact schema, skill definitions |
-| Topic 6 — Guardrails | `guardrails.md`, `INCIDENT_RESPONSE.md`, incident issue template, `guardrails-check.yml` |
+| Topic 5 — Multi-Agent | Planner/executor/reviewer workflow, handoff artifact schema, skill definitions, `workflow-diagram.md` |
+| Topic 6 — Guardrails | `guardrails.md`, `INCIDENT_RESPONSE.md`, incident issue template, `guardrails-check.yml`, `workflow-diagram.md` |
 
 ---
 

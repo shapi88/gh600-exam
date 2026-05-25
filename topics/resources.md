@@ -3,6 +3,10 @@
 > [!NOTE]
 > GitHub and Microsoft documentation URLs can change over time. If any link below has moved, use the relevant docs home page or site search to locate the current article by title.
 
+> [!TIP]
+> **Before exam day:** spot-check 2–3 links per topic to confirm they resolve. The [GitHub Docs Index](../deep-dives/docs-index.md) lists every URL in one place for fast verification.  
+> **Last link-verified:** 2026-05-19
+
 ---
 
 ## Official GitHub Documentation

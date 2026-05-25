@@ -2,6 +2,17 @@
 
 Quick-reference map of every GitHub documentation URL used across this study package, organised by topic. Use this during review to jump directly to the official source for any concept.
 
+> [!TIP]
+> **Last link-verified:** 2026-05-19. Spot-check before exam day — GitHub Docs URLs can change.
+
+---
+
+## Diagram Quick Reference
+
+For a visual overview of the complete agentic AI development workflow (actors, phases, human gates, artifacts, and hard stops), see:
+
+- **[topics/workflow-diagram.md](../topics/workflow-diagram.md)** — Full Mermaid sequence diagram, decision flowchart, and step-to-control reference table
+
 ---
 
 ## Topic 1 — Agent Architecture and SDLC
