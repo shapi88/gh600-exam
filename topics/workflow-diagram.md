@@ -84,7 +84,8 @@ sequenceDiagram
     Note over Human,GitHub: 🟡 HUMAN GATE #1 — Plan Approval
     GitHub-->>Human: Notify: Draft PR ready for plan review
     Human->>GitHub: Review plan → Approve or Request Changes
-    Note over Human: If diff touches .github/workflows/, CODEOWNERS,<br/>or copilot-instructions.md → 🔴 HARD STOP here
+    Note over Human: If diff touches .github/workflows/, CODEOWNERS,
+    Note over Human: or copilot-instructions.md → 🔴 HARD STOP here
 ```
 
 ---
@@ -202,7 +203,7 @@ sequenceDiagram
     Note over GitHub: 📦 Every step produced a durable artifact or log entry
     Note over GitHub: 🔒 GitHub Audit Log captures all API events (actor, action, timestamp)
     Human->>CI: ⚡ Run agent-eval.yml against golden scenarios (optional)
-    CI->>GitHub: Commit evals/results-v<N>.md with scored rubric results
+    CI->>GitHub: Commit evals/results-v{N}.md with scored rubric results
 
     %% ── Phase 7: Incident Response (if needed) ─────────────────────────────
     Note over Human,GitHub: PHASE 7 — Incident Response (if harmful action detected)
@@ -243,7 +244,7 @@ flowchart TD
     L -- Yes --> M{🟡 Human Gate 2\nHuman PR approval?}
 
     M -- No / Changes requested --> G
-    M -- Yes — by someone other than\nthe agent author --> N[Merge to main]
+    M -- "Yes — by someone other than the agent author" --> N[Merge to main]
 
     N --> O[Deploy workflow triggers\nenvironment: production]
     O --> P{🟡 Human Gate 3\nEnvironment approval?}
