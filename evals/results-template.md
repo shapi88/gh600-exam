@@ -7,6 +7,8 @@ Do not edit existing `results-v*.md` files — always create a new version.
 > The exam form converts dimension grades to a numeric pass rate and produces the official Pass/Fail gate verdict.
 > This file captures raw agent output; the exam form captures the scored summary.
 
+> **Consistency note:** All `results-v*.md` files must include the header fields below, the Results Table, and the Summary section. Raw Observations and Tuning Actions are optional for informal runs but required for any run that informs a prompt change.
+
 ---
 
 **Prompt version:** <!-- e.g. v3 -->

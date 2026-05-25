@@ -21,8 +21,8 @@ Read this file before acting on any task. It complements `.github/copilot-instru
 | File / Path | Purpose |
 | --- | --- |
 | `README.md` | Top-level index and 5-week study plan |
-| `topics/` | 6 topic files + cheat sheets + resources |
-| `tutorials/` | 7 hands-on lab files (00–06) |
+| `topics/` | 6 topic files + workflow diagram + cheat sheets + resources |
+| `tutorials/` | 7 hands-on lab files (00–06) + README navigation index |
 | `deep-dives/` | 7 deep-dive files + docs index |
 | `evals/` | Evaluation scenarios, rubric, and versioned results |
 | `templates/` | Copy-paste-ready templates for agent configuration |

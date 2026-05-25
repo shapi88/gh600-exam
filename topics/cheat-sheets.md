@@ -2,9 +2,13 @@
 
 Quick-reference tables covering every major decision area for the GH-600 exam. Use these during daily review and before mock exam sessions.
 
+> **⭐ Exam weight key:** ⭐⭐⭐ = High (frequently tested, core concept) · ⭐⭐ = Medium (tested, applied knowledge) · ⭐ = Low (tested indirectly or as edge case)
+
 ---
 
 ## Memory Types
+
+> ⭐⭐⭐ High — commonly tested via scenario questions about where to store data
 
 | Memory type | Best use | Lifetime | Risks | Good exam answer |
 | --- | --- | --- | --- | --- |
@@ -19,6 +23,8 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 
 ## Orchestration Patterns
 
+> ⭐⭐⭐ High — tested via "which pattern fits this scenario?" questions
+
 | Pattern | Best for | Strength | Weakness | Use when |
 | --- | --- | --- | --- | --- |
 | Single constrained agent | Small, bounded tasks | Lowest complexity | Limited specialization | One task, low ambiguity |
@@ -31,6 +37,8 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 
 ## Autonomy Levels
 
+> ⭐⭐⭐ High — directly tested; know which level maps to which controls
+
 | Level | Agent capability | Recommended controls |
 | --- | --- | --- |
 | 0 | Suggest only | Human executes everything; agent has no write access |
@@ -42,6 +50,8 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 ---
 
 ## Key Permissions and Settings
+
+> ⭐⭐⭐ High — every exam workflow question tests at least one of these
 
 | Control | Why it matters | Safer default |
 | --- | --- | --- |
@@ -56,6 +66,8 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 
 ## Decision Framework
 
+> ⭐⭐ Medium — tested as "which approach is correct given these constraints?"
+
 | Question | If yes | If no |
 | --- | --- | --- |
 | Does the task require external data or tooling? | Consider MCP or API tooling with narrow scope | Keep it in-repo only |
@@ -67,6 +79,8 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 ---
 
 ## Error Category Quick Reference
+
+> ⭐⭐⭐ High — directly tested; map each error to its mitigation
 
 | Error type | Description | Mitigation |
 | --- | --- | --- |
@@ -80,6 +94,8 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 
 ## GitHub Control Plane Quick Map
 
+> ⭐⭐⭐ High — the most common exam answer pattern: "which GitHub artifact/control handles this?"
+
 | Agent action | GitHub artifact or control |
 | --- | --- |
 | Capture intent | Issue with acceptance criteria |
@@ -91,3 +107,46 @@ Quick-reference tables covering every major decision area for the GH-600 exam. U
 | Audit execution | Workflow logs and artifacts |
 | Limit token scope | `permissions:` block |
 | Avoid long-lived credentials | OIDC |
+
+---
+
+## Guardrails Hard Stops — Complete List
+
+> ⭐⭐ Medium — know all 10; items 7–10 are often overlooked
+
+| # | Prohibited action | Reason |
+| --- | --- | --- |
+| 1 | Modify `.github/workflows/` | Workflow changes can escalate privileges |
+| 2 | Modify `CODEOWNERS` | Removing owners removes all other guardrails |
+| 3 | Modify `.github/copilot-instructions.md` | Modifying standing orders undermines all policies |
+| 4 | Push directly to `main` | Bypasses required review |
+| 5 | Expose a secret, token, or credential in a log, comment, or artifact | Irreversible credential leakage |
+| 6 | Call an MCP server not in `.github/mcp-config.json` | Unreviewed attack surface |
+| 7 | Approve or merge a PR the agent itself authored | Removes human-in-the-loop entirely |
+| 8 | Delete a branch that has an open PR | Destroys audit trail |
+| 9 | Modify or delete an existing evaluation baseline | Corrupts benchmark data |
+| 10 | Trigger a deployment to the `production` environment autonomously | Must always have a human approval gate |
+
+---
+
+## Handoff Artifact Schema Fields
+
+> ⭐⭐ Medium — tested in multi-agent coordination scenarios
+
+Required fields in every inter-agent handoff artifact (`templates/artifact-schema.json`):
+
+| Field | Type | Purpose |
+| --- | --- | --- |
+| `artifact_version` | string | Schema version for compatibility |
+| `generated_at` | ISO 8601 datetime | Timestamp for staleness checks |
+| `source_agent` | string | Skill name of the producing agent |
+| `target_agent` | string | Skill name of the consuming agent |
+| `workflow_run_id` | integer | Links artifact to its Actions run |
+| `task_id` | string (`XX-NNN`) | Unique task identifier |
+| `status` | enum | `pending_approval` · `approved` · `in_progress` · `completed` · `failed` · `cancelled` |
+| `requires_human_approval` | boolean | Always `true` for Level 2+ handoffs |
+| `payload.description` | string | Plain-text task description |
+| `payload.inputs` | object | Key-value inputs for the target agent |
+| `payload.expected_outputs` | array | Output items the target must produce |
+| `payload.stop_conditions` | array | Conditions that trigger a hard stop |
+| `payload.permissions` | object | Required token scopes for the target agent |
