@@ -2,7 +2,20 @@
 
 This file provides a visual reference for the full agentic AI development lifecycle on GitHub. It covers all actors, phases, human gates, artifacts, and hard stops.
 
+The full lifecycle is split into **four focused sequence diagrams** to keep each one readable. Each diagram covers a coherent sub-workflow and can be read independently. A Decision Flowchart and reference tables follow the diagrams for quick lookup.
+
 > **GH-600 topics covered:** All 6 — Architecture (1), Tool Use (2), Memory/State (3), Evaluation (4), Multi-Agent (5), Guardrails (6)
+
+---
+
+## Diagram Index
+
+| Diagram | Phases | Participants | GH-600 topics |
+| --- | --- | --- | --- |
+| [1 — Intent & Planning](#diagram-1--intent--planning-phases-01) | 0–1 | Human, GitHub, Planner, MCP | 1, 3, 5, 6 |
+| [2 — Execution & CI Guardrails](#diagram-2--execution--ci-guardrails-phase-2) | 2 | Executor, GitHub, CI | 1, 3, 4, 6 |
+| [3 — Review & Merge Gate](#diagram-3--review--merge-gate-phases-34) | 3–4 | Reviewer, Coordinator, CI, GitHub, Human | 1, 4, 5, 6 |
+| [4 — Deploy, Audit & Incident Response](#diagram-4--deploy-audit--incident-response-phases-57) | 5–7 | CI, Prod, Human, GitHub | 2, 3, 4, 6 |
 
 ---
 
@@ -36,20 +49,18 @@ This file provides a visual reference for the full agentic AI development lifecy
 
 ---
 
-## Sequence Diagram — Full Lifecycle
+## Diagram 1 — Intent & Planning (Phases 0–1)
+
+> **Participants:** Human · GitHub Platform · Planner Agent · MCP Servers  
+> **Covers:** Issue creation → plan.json artifact → Draft PR → Human Gate #1 (Plan Approval)
 
 ```mermaid
-    sequenceDiagram
+sequenceDiagram
     autonumber
     actor Human
     participant GitHub as GitHub Platform
     participant Planner as Planner Agent
-    participant Executor as Executor Agent
-    participant Reviewer as Reviewer Agent
-    participant Coordinator as Coordinator Agent
-    participant CI as GitHub Actions (CI)
     participant MCP as MCP Servers
-    participant Prod as Production Environment
 
     %% ── Phase 0: Intent Capture ────────────────────────────────────────────
     Note over Human,GitHub: PHASE 0 — Intent Capture (Autonomy Level 1)
@@ -63,16 +74,35 @@ This file provides a visual reference for the full agentic AI development lifecy
     Planner->>GitHub: Read Issue #N, copilot-instructions.md, copilot-memory.md
     Planner->>MCP: Read relevant repo files (contents:read only)
     MCP-->>Planner: File contents
-    Note over Planner: 🟢 Reads are autonomous;
-    Planner->>CI: Upload plan.json artifact (steps, file list, requires_human_approval: true)
-    Note over CI: 📦 plan.json = handoff artifact (artifact-schema.json)
+    Note over Planner: 🟢 Reads are autonomous; no writes at this phase
+    Planner->>GitHub: Upload plan.json artifact (steps, file list, requires_human_approval: true)
+    Note over GitHub: 📦 plan.json = handoff artifact (artifact-schema.json)
     Planner->>GitHub: Open Draft PR with plan as description (no code changes)
     Note over GitHub: 📦 Draft PR = proposal artifact + audit trail entry
 
+    %% ── Human Gate #1 ──────────────────────────────────────────────────────
     Note over Human,GitHub: 🟡 HUMAN GATE #1 — Plan Approval
     GitHub-->>Human: Notify: Draft PR ready for plan review
     Human->>GitHub: Review plan → Approve or Request Changes
-    Note over Human: If diff touches .github/workflows/, CODEOWNERS,\nor copilot-instructions.md → 🔴 HARD STOP here
+    Note over Human: If diff touches .github/workflows/, CODEOWNERS,<br/>or copilot-instructions.md → 🔴 HARD STOP here
+```
+
+---
+
+## Diagram 2 — Execution & CI Guardrails (Phase 2)
+
+> **Participants:** Executor Agent · GitHub Platform · GitHub Actions (CI)  
+> **Continues from:** Diagram 1 — Plan approved by human  
+> **Covers:** Scope validation → branch creation → code changes → guardrails-check hard stops
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Executor as Executor Agent
+    participant GitHub as GitHub Platform
+    participant CI as GitHub Actions (CI)
+
+    Note over Executor,CI: Continues from Diagram 1 — Plan approved by human
 
     %% ── Phase 2: Execution ─────────────────────────────────────────────────
     Note over Executor,CI: PHASE 2 — Execution (Autonomy Level 2)
@@ -80,20 +110,40 @@ This file provides a visual reference for the full agentic AI development lifecy
     Executor->>Executor: Validate scope (file count ≤ limit, no protected paths)
     Note over Executor: 🔴 HARD STOP if plan includes .github/workflows/ or CODEOWNERS
     Executor->>GitHub: Create scoped branch (copilot/<task> or agent/<task>)
-    Executor->>GitHub: Implement only approved steps;
+    Executor->>GitHub: Implement only approved steps
     Note over Executor: 🟢 Only files listed in plan.json are touched
     Executor->>CI: Upload execution-result.json (steps_completed, files_modified, status)
     Note over CI: 📦 execution-result.json = executor handoff artifact
 
     CI->>CI: ⚡ guardrails-check.yml runs (scope control + secret scan + attribution check)
     Note over CI: 🔴 HARD STOP if >20 files changed, secrets found, or no PR description
+```
+
+---
+
+## Diagram 3 — Review & Merge Gate (Phases 3–4)
+
+> **Participants:** Reviewer Agent · Coordinator Agent · GitHub Actions (CI) · GitHub Platform · Human  
+> **Continues from:** Diagram 2 — Guardrails passed, PR open  
+> **Covers:** 4-dimension rubric → optional specialist swarm → Human Gate #2 (PR Merge)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Reviewer as Reviewer Agent
+    participant Coordinator as Coordinator Agent
+    participant CI as GitHub Actions (CI)
+    participant GitHub as GitHub Platform
+    actor Human
+
+    Note over Reviewer,Human: Continues from Diagram 2 — Guardrails passed, PR open
 
     %% ── Phase 3: Review ────────────────────────────────────────────────────
     Note over Reviewer,CI: PHASE 3 — Review (Autonomous, read-only)
     Reviewer->>CI: Download plan.json + execution-result.json
     Reviewer->>Reviewer: Cross-check planned vs executed files
     Reviewer->>Reviewer: Evaluate 4-dimension rubric (Correctness, Scope, Safety, Auditability)
-    Note over Reviewer: 🟢 Reviewer is read-only;
+    Note over Reviewer: 🟢 Reviewer is read-only; no code writes
     Reviewer->>GitHub: Post structured review comment with findings and recommendation
     Note over GitHub: 📦 PR review comment = reviewer handoff artifact
 
@@ -114,6 +164,25 @@ This file provides a visual reference for the full agentic AI development lifecy
     Note over Human: 🔴 HARD STOP: the agent that authored the PR may NOT approve it
     Human->>GitHub: Merge PR into main
     Note over GitHub: 📦 Merge commit = permanent audit trail entry
+```
+
+---
+
+## Diagram 4 — Deploy, Audit & Incident Response (Phases 5–7)
+
+> **Participants:** GitHub Actions (CI) · Production Environment · Human · GitHub Platform  
+> **Continues from:** Diagram 3 — PR merged to main  
+> **Covers:** Deploy trigger → Human Gate #3 → OIDC deploy → eval run → revert/incident report
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CI as GitHub Actions (CI)
+    participant Prod as Production Environment
+    actor Human
+    participant GitHub as GitHub Platform
+
+    Note over CI,GitHub: Continues from Diagram 3 — PR merged to main
 
     %% ── Phase 5: Deploy ────────────────────────────────────────────────────
     Note over CI,Prod: PHASE 5 — Deployment (Autonomy Level 4)
@@ -125,7 +194,7 @@ This file provides a visual reference for the full agentic AI development lifecy
     Prod-->>Human: Notify: deployment pending approval
     Human->>Prod: Approve deployment
     CI->>Prod: Deploy with OIDC short-lived token (no static secrets)
-    Note over CI: ⚡ Deployment result logged to Actions;
+    Note over CI: ⚡ Deployment result logged to Actions
 
     %% ── Phase 6: Audit and Evaluation ──────────────────────────────────────
     Note over Human,CI: PHASE 6 — Audit and Evaluation (Ongoing)
@@ -140,7 +209,7 @@ This file provides a visual reference for the full agentic AI development lifecy
     Human->>GitHub: git revert <bad-sha> OR close PR + delete branch
     Human->>GitHub: File incident report (.github/ISSUE_TEMPLATE/agent-incident.md)
     Human->>GitHub: Update copilot-instructions.md, guardrails.md, or CODEOWNERS
-    Note over Human: 🔴 Prompt-only fixes are insufficient;
+    Note over Human: 🔴 Prompt-only fixes are insufficient; update platform controls
 ```
 
 ---
