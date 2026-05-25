@@ -38,7 +38,7 @@ This file provides a visual reference for the full agentic AI development lifecy
 
 ## Sequence Diagram — Full Lifecycle
 
-``` mermaid
+```mermaid
     sequenceDiagram
     autonumber
     actor Human
