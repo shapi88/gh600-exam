@@ -38,8 +38,8 @@ This file provides a visual reference for the full agentic AI development lifecy
 
 ## Sequence Diagram — Full Lifecycle
 
-```mermaid
-sequenceDiagram
+``` mermaid
+    sequenceDiagram
     autonumber
     actor Human
     participant GitHub as GitHub Platform
@@ -63,7 +63,7 @@ sequenceDiagram
     Planner->>GitHub: Read Issue #N, copilot-instructions.md, copilot-memory.md
     Planner->>MCP: Read relevant repo files (contents:read only)
     MCP-->>Planner: File contents
-    Note over Planner: 🟢 Reads are autonomous; no writes yet
+    Note over Planner: 🟢 Reads are autonomous;
     Planner->>CI: Upload plan.json artifact (steps, file list, requires_human_approval: true)
     Note over CI: 📦 plan.json = handoff artifact (artifact-schema.json)
     Planner->>GitHub: Open Draft PR with plan as description (no code changes)
@@ -80,7 +80,7 @@ sequenceDiagram
     Executor->>Executor: Validate scope (file count ≤ limit, no protected paths)
     Note over Executor: 🔴 HARD STOP if plan includes .github/workflows/ or CODEOWNERS
     Executor->>GitHub: Create scoped branch (copilot/<task> or agent/<task>)
-    Executor->>GitHub: Implement only approved steps; commit with rationale message
+    Executor->>GitHub: Implement only approved steps;
     Note over Executor: 🟢 Only files listed in plan.json are touched
     Executor->>CI: Upload execution-result.json (steps_completed, files_modified, status)
     Note over CI: 📦 execution-result.json = executor handoff artifact
@@ -93,7 +93,7 @@ sequenceDiagram
     Reviewer->>CI: Download plan.json + execution-result.json
     Reviewer->>Reviewer: Cross-check planned vs executed files
     Reviewer->>Reviewer: Evaluate 4-dimension rubric (Correctness, Scope, Safety, Auditability)
-    Note over Reviewer: 🟢 Reviewer is read-only; no write access to code
+    Note over Reviewer: 🟢 Reviewer is read-only;
     Reviewer->>GitHub: Post structured review comment with findings and recommendation
     Note over GitHub: 📦 PR review comment = reviewer handoff artifact
 
@@ -125,8 +125,7 @@ sequenceDiagram
     Prod-->>Human: Notify: deployment pending approval
     Human->>Prod: Approve deployment
     CI->>Prod: Deploy with OIDC short-lived token (no static secrets)
-    Note over CI: ⚡ Deployment result logged to Actions; OIDC token expires after use
-    Prod-->>CI: Deployment success / failure
+    Note over CI: ⚡ Deployment result logged to Actions;
 
     %% ── Phase 6: Audit and Evaluation ──────────────────────────────────────
     Note over Human,CI: PHASE 6 — Audit and Evaluation (Ongoing)
@@ -141,7 +140,7 @@ sequenceDiagram
     Human->>GitHub: git revert <bad-sha> OR close PR + delete branch
     Human->>GitHub: File incident report (.github/ISSUE_TEMPLATE/agent-incident.md)
     Human->>GitHub: Update copilot-instructions.md, guardrails.md, or CODEOWNERS
-    Note over Human: 🔴 Prompt-only fixes are insufficient; platform controls must be updated
+    Note over Human: 🔴 Prompt-only fixes are insufficient;
 ```
 
 ---
