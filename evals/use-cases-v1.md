@@ -19,7 +19,7 @@
 
 A startup's platform team wants to speed up routine refactors by connecting a GitHub Copilot agent to their monorepo. They configure the agent with:
 
-- A `copilot-instructions.md` that describes the refactor rules (Autonomy Level 1 behaviour).
+- A `copilot-instructions.md` that describes the refactor rules (Autonomy Level 1 behavior).
 - A workflow that grants the agent `contents: write` on all branches **including `main`** and calls `gh pr merge --auto` after CI passes.
 
 During a weekend, the agent processes a large rename refactor. CI passes in 4 minutes. The auto-merge fires before any engineer has a chance to review. The refactor renames an internal RPC symbol that a downstream service depends on, causing a production outage that takes 3 hours to recover.
@@ -35,6 +35,7 @@ During a weekend, the agent processes a large rename refactor. CI passes in 4 mi
 
 **Step 1 — Correct the autonomy level mismatch.**  
 Remove `gh pr merge --auto` from the workflow. The agent's role is to *propose* changes, not to merge them. A Copilot agent operating at Autonomy Level 1 should open a **draft PR** only; a human promotes it to ready-for-review when satisfied.
+
 
 **Step 2 — Restrict branch permissions.**  
 Change the workflow `permissions:` block so `contents: write` applies only to the agent's working branch (`copilot/*`), not to `main`. Use branch protection rules on `main` to require at least one human approving review before merge.
