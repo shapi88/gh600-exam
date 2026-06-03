@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "PreToolUsePolicy",
+  "description": "Pre-execution security rules and validations for agent tools.",
+  "version": "1.0.0",
+  "defaults": {
+    "decision": "allow",
+    "require_confirmation": false
+  },
+  "tools": [
+    {
+      "name": "run_command",
+      "description": "Any shell execution tool.",
+      "decision": "confirm",
+      "require_confirmation": true,
+      "validation_rules": [
+        {
+          "pattern": "rm\\s+-rf\\s+/",
+          "action": "deny",
+          "reason": "Destructive shell commands targeting system root are prohibited."
+        },
+        {
+          "pattern": "git\\s+push\\s+--force|git\\s+push\\s+-f",
+          "action": "deny",
+          "reason": "Force pushing to git branches is blocked by policy."
+        },
+        {
+          "pattern": "curl\\s+.*\\|\\s*bash|wget\\s+.*\\|\\s*bash",
+          "action": "deny",
+          "reason": "Downloading and executing unverified scripts directly from the internet is prohibited."
+        }
+      ]
+    },
+    {
+      "name": "write_to_file",
+      "description": "Writing new files.",
+      "decision": "allow",
+      "require_confirmation": false,
+      "validation_rules": [
+        {
+          "pattern": "^\\.github/workflows/|^\\.github/CODEOWNERS|^\\.github/copilot-instructions\\.md",
+          "target_arg": "TargetFile",
+          "action": "deny",
+          "reason": "Direct modifications to workflow, CODEOWNERS, or instruction templates are protected governance paths."
+        }
+      ]
+    },
+    {
+      "name": "replace_file_content",
+      "description": "Replacing lines in files.",
+      "decision": "allow",
+      "require_confirmation": false,
+      "validation_rules": [
+        {
+          "pattern": "^\\.github/workflows/|^\\.github/CODEOWNERS|^\\.github/copilot-instructions\\.md",
+          "target_arg": "TargetFile",
+          "action": "deny",
+          "reason": "Direct modifications to workflow, CODEOWNERS, or instruction templates are protected governance paths."
+        }
+      ]
+    },
+    {
+      "name": "multi_replace_file_content",
+      "description": "Replacing multiple blocks in files.",
+      "decision": "allow",
+      "require_confirmation": false,
+      "validation_rules": [
+        {
+          "pattern": "^\\.github/workflows/|^\\.github/CODEOWNERS|^\\.github/copilot-instructions\\.md",
+          "target_arg": "TargetFile",
+          "action": "deny",
+          "reason": "Direct modifications to workflow, CODEOWNERS, or instruction templates are protected governance paths."
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# Copilot Agent Memory
+# Project Agent Memory
 
 This file provides persistent context hints for agentic AI assistants operating in this repository.
 Read this file before acting on any task. It complements `.github/copilot-instructions.md`.
@@ -31,7 +31,7 @@ Read this file before acting on any task. It complements `.github/copilot-instru
 | `.github/mcp-config.json` | Approved MCP server registry |
 | `.github/skills/` | Skill YAML definitions (5 skills) |
 | `.github/INCIDENT_RESPONSE.md` | Runbook for handling bad agent actions |
-| `CODEOWNERS` | Human review requirements for sensitive paths |
+| `.github/CODEOWNERS` | Human review requirements for sensitive paths |
 | `.github/branch-protection.md` | Documented branch protection settings |
 
 ---
@@ -123,4 +123,3 @@ This section stores short-term session state, active tasks, and execution progre
 
 ### Session Observations & Findings
 - _(Any key technical findings, config values, or errors encountered during execution)_
-
