@@ -143,6 +143,7 @@ Each deep-dive file is a companion to its topic. It links every concept to the a
 
 | Template | What it provides |
 | --- | --- |
+| [templates/manual.md](templates/manual.md) | **Start here** — step-by-step guide to configure all Copilot capabilities from scratch |
 | [templates/copilot-instructions-example.md](templates/copilot-instructions-example.md) | Fully annotated `copilot-instructions.md` with guidance |
 | [templates/copilot-memory-example.md](templates/copilot-memory-example.md) | Annotated `copilot-memory.md` template with field-by-field explanation |
 | [templates/mcp-config-example.json](templates/mcp-config-example.json) | MCP config with 3 annotated example servers and deny list |
