@@ -69,7 +69,7 @@ jobs:
           BRANCH: ${{ github.ref_name }}
         run: |
           if echo "$BRANCH" | grep -qE '^(copilot/|agent/)'; then
-            changed_codeowners=$(git diff HEAD~1 HEAD --name-only | grep -E '^CODEOWNERS$|^\.github/copilot-instructions\.md$' || true)
+            changed_codeowners=$(git diff HEAD~1 HEAD --name-only | grep -E '^CODEOWNERS$|^\.github/CODEOWNERS$|^\.github/copilot-instructions\.md$' || true)
             if [ -n "$changed_codeowners" ]; then
               echo "::error::Agent branch '$BRANCH' modified governance files: $changed_codeowners"
               echo "::error::Per copilot-instructions.md stop condition #2, this is not permitted."

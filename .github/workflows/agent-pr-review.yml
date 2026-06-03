@@ -45,7 +45,7 @@ jobs:
         run: |
           # Stop condition: diff touches .github/workflows/ or CODEOWNERS
           sensitive=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | \
-            grep -E '^\.github/workflows/|^CODEOWNERS|^\.github/copilot-instructions\.md' || true)
+            grep -E '^\.github/workflows/|^CODEOWNERS|^\.github/CODEOWNERS|^\.github/copilot-instructions\.md' || true)
           if [ -n "$sensitive" ]; then
             echo "touches_sensitive=true" >> "$GITHUB_OUTPUT"
             echo "::warning::Sensitive paths detected: $sensitive"
