@@ -36,7 +36,7 @@ jobs:
       subtask_count: ${{ steps.plan.outputs.subtask_count }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -98,7 +98,7 @@ jobs:
           echo "subtask_count=$subtask_count" >> "$GITHUB_OUTPUT"
 
       - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.plan.outputs.artifact_name }}
           path: /tmp/plan-output/plan.json
@@ -131,12 +131,12 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Download plan artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.planner.outputs.plan_artifact }}
           path: /tmp/plan-input
@@ -175,7 +175,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
