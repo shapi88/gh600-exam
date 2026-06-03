@@ -35,7 +35,7 @@ jobs:
       rubric_exists: ${{ steps.check.outputs.rubric_exists }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -72,7 +72,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
 
@@ -148,7 +148,7 @@ jobs:
           echo "scenario_count=$SCENARIO_COUNT" >> "$GITHUB_OUTPUT"
 
       - name: Upload results artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eval-results-${{ inputs.prompt_version }}
           path: /tmp/eval-output/results-${{ inputs.prompt_version }}.md
